@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
+  <meta name="description" content="VanBerto's — O Dia da Criança: jogo educativo sobre os direitos e o Dia da Criança." />
+  <meta name="theme-color" content="#ff6b35" />
+  <title>VanBerto's — O Dia da Criança</title>
+  <link rel="stylesheet" href="dia-crianca.css" />
+</head>
+<body>
+
+  <div id="game"></div>
+
+  <!-- MODAL INICIAL -->
+  <div id="startOverlay" class="overlay">
+    <div class="card">
+      <div class="card-seal" aria-hidden="true">🌟</div>
+      <h1>🎈 O Dia da Criança</h1>
+      <p class="sub"><strong>Professora:</strong> Vanda Várzea</p>
+      <p class="desc">
+        Ajuda o VanBerto's a descobrir os <strong>direitos das crianças</strong>
+        e as curiosidades sobre o <strong>Dia da Criança</strong>!<br>
+        Apanha itens pelo caminho e chega ao <strong>portal ✨</strong> para responder à pergunta.<br>
+        Cuidado com os <strong>3 tipos de vilões</strong>:
+        🔴 bola vermelha (fácil) · 🔵 espinhoso azul (médio) · 🟢 inseto verde (difícil).<br>
+        Clica em <strong>"Como jogar ❓"</strong> para ver tudo explicado!
+      </p>
+      <div class="name-row">
+        <label for="playerName">O teu nome:</label>
+        <input type="text" id="playerName" maxlength="20" placeholder="Escreve o teu nome…" autocomplete="off" />
+      </div>
+      <div class="row">
+        <button id="btnStart" class="btn primary">▶ Começar</button>
+        <button id="btnHow" class="btn">Como jogar ❓</button>
+        <button id="btnMute" class="btn">🔊 Som: ON</button>
+        <button id="btnTouchToggleStart" class="btn">📱 Botões: AUTO</button>
+        <button id="btnFullscreen" class="btn">⛶ Ecrã todo</button>
+      </div>
+      <p class="tiny">
+        PC: ← → para andar e ↑/Espaço para saltar.<br>
+        Tablet/telemóvel: mantém o dedo no lado esquerdo/direito para andar e faz um toque rápido para saltar.
+      </p>
+    </div>
+  </div>
+
+  <!-- MODAL COMO JOGAR -->
+  <div id="howOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Como jogar">
+    <div class="card" style="max-height:88dvh;overflow-y:auto;padding:18px 20px;">
+      <h2 style="margin-bottom:4px;">Como jogar</h2>
+      <p style="font-size:11px;color:#ffd070;margin:0 0 12px;font-style:italic;">Lê com atenção antes de começar!</p>
+
+      <!-- OBJETIVO -->
+      <p style="font-weight:700;font-size:13px;color:#ff6b35;margin:8px 0 4px;">🎯 Objetivo</p>
+      <p style="font-size:12px;color:#ffe0d0;margin:0 0 10px;line-height:1.6;">
+        Chega ao <strong>portal ✨</strong> no fim de cada nível. Quando chegares, aparece uma <strong>pergunta</strong> sobre os Direitos das Crianças — responde corretamente para avançar! O jogo tem <strong>20 níveis</strong>.
+      </p>
+
+      <!-- VILÕES -->
+      <p style="font-weight:700;font-size:13px;color:#ff6b35;margin:8px 0 6px;">👾 Os Vilões — cuidado com cada tipo!</p>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+        <div style="background:rgba(255,30,0,0.12);border:1px solid rgba(255,80,80,0.3);border-radius:8px;padding:7px 10px;font-size:12px;color:#ffe0d0;line-height:1.5;">
+          🔴 <strong>Bola Vermelha — PEQUENA</strong> (mais fácil)<br>
+          <span style="color:#ffb0a0;">Patrulha uma zona pequena em vai-e-vem. Lenta e previsível — boa para treinar!</span>
+        </div>
+        <div style="background:rgba(0,60,220,0.14);border:1px solid rgba(80,130,255,0.3);border-radius:8px;padding:7px 10px;font-size:12px;color:#ffe0d0;line-height:1.5;">
+          🔵 <strong>Espinhoso Azul — MÉDIO</strong><br>
+          <span style="color:#b0c8ff;">Patrulha horizontalmente e salta de vez em quando. Mantém distância!</span>
+        </div>
+        <div style="background:rgba(0,160,0,0.12);border:1px solid rgba(80,200,80,0.3);border-radius:8px;padding:7px 10px;font-size:12px;color:#ffe0d0;line-height:1.5;">
+          🟢 <strong>Inseto Verde — GRANDE</strong> (mais perigoso)<br>
+          <span style="color:#a0ffb0;">Salta frequentemente e dirige-se ao jogador. Aparece nos níveis mais avançados — muito cuidado!</span>
+        </div>
+      </div>
+      <p style="font-size:11px;color:#ffd070;margin:0 0 10px;font-style:italic;">
+        💡 Se apanhares a estrela ⭐, podes atropelar qualquer vilão durante 8 segundos!
+      </p>
+
+      <!-- ITENS -->
+      <p style="font-weight:700;font-size:13px;color:#ff6b35;margin:8px 0 6px;">🎁 O que apanhar</p>
+      <ul style="margin:0 0 10px;padding-left:18px;font-size:12px;color:#ffe0d0;line-height:1.9;">
+        <li>⭐ <strong>Estrela</strong> — ativa o <strong>Star Power por 8s</strong>: atropela vilões e ganha pontos!</li>
+        <li>🛡️ <strong>Escudo</strong> — fica maior e <strong>invencível por 8s</strong>; absorve um golpe de vilão</li>
+        <li>🦅 <strong>Asas</strong> — permite <strong>saltar duas vezes</strong> no ar durante 10s (muito útil em plataformas altas!)</li>
+        <li>❤️ <strong>Coração</strong> — ganha <strong>+1 vida</strong> (máximo 5 vidas)</li>
+        <li>🧸 <strong>Brinquedo / 🍭 Chupa-chupa / 🏅 Medalha</strong> — valem <strong>pontos bónus</strong></li>
+        <li>❓ <strong>Ponto de interrogação</strong> — esconde um item surpresa! Passa por cima para revelar</li>
+      </ul>
+      <p style="font-size:11px;color:#ffd070;margin:0 0 10px;font-style:italic;">
+        💡 Se perderes uma vida, <strong>todos os itens voltam a aparecer</strong> — podes apanhá-los de novo!
+      </p>
+
+      <!-- PLATAFORMAS ESPECIAIS -->
+      <p style="font-weight:700;font-size:13px;color:#ff6b35;margin:8px 0 6px;">🟡 Plataformas especiais</p>
+      <ul style="margin:0 0 10px;padding-left:18px;font-size:12px;color:#ffe0d0;line-height:1.9;">
+        <li>↔ <strong>Setas horizontais</strong> — a plataforma move-se da esquerda para a direita</li>
+        <li>↕ <strong>Setas verticais</strong> — a plataforma sobe e desce</li>
+        <li>🟠 <strong>Trampolim</strong> — catapulta-te muito mais alto que um salto normal!</li>
+      </ul>
+
+      <!-- PONTUAÇÃO -->
+      <p style="font-weight:700;font-size:13px;color:#ff6b35;margin:8px 0 6px;">⭐ Pontuação</p>
+      <ul style="margin:0 0 10px;padding-left:18px;font-size:12px;color:#ffe0d0;line-height:1.9;">
+        <li>✅ Resposta certa à primeira → <strong>+100 pontos por nível</strong></li>
+        <li>🥇 Nível sem perder nenhuma vida → <strong>bónus +50 pontos</strong></li>
+        <li>💥 Atropelar vilão com Star Power → <strong>+50 pontos por vilão</strong></li>
+      </ul>
+
+      <!-- CONTROLOS -->
+      <p style="font-weight:700;font-size:13px;color:#ff6b35;margin:8px 0 4px;">🖥️ Controlos — PC / Teclado</p>
+      <p style="margin:2px 0 8px;font-size:12px;color:#ffe0d0;">← → para andar &nbsp;|&nbsp; ↑ ou Espaço para saltar &nbsp;|&nbsp; H para alto contraste</p>
+      <p style="font-weight:700;font-size:13px;color:#ff6b35;margin:4px 0 4px;">📱 Tablet / Telemóvel</p>
+      <p style="margin:2px 0 14px;font-size:12px;color:#ffe0d0;">Mantém o dedo no lado esquerdo/direito para andar · Toque rápido para saltar</p>
+
+      <button id="btnCloseHow" class="btn primary" style="width:100%;">Entendido — vamos jogar! ▶</button>
+    </div>
+  </div>
+
+  <!-- MODAL PERGUNTA -->
+  <div id="quizOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="quizQuestion">
+    <div class="card">
+      <div class="card-seal" aria-hidden="true">🎈</div>
+      <p id="quizQuestion" class="q" aria-live="polite"></p>
+      <div id="quizAnswers" class="answers" role="group" aria-label="Opções de resposta"></div>
+      <p id="quizFeedback" class="feedback" aria-live="assertive"></p>
+      <p id="quizExplanation" class="explanation hidden"></p>
+      <button id="btnCloseQuiz" class="btn hidden">Continuar</button>
+    </div>
+  </div>
+
+  <!-- CONTROLOS DO PROFESSOR -->
+  <div id="teacherControls" style="position:fixed;top:12px;right:12px;z-index:9500;display:flex;gap:8px;flex-wrap:wrap;">
+    <button id="btnTeacherMenu" class="btn" aria-label="Menu" title="Menu">☰</button>
+    <button id="btnFullscreenGame" class="btn" title="Ecrã todo (tecla F)">⛶ Ecrã todo</button>
+    <button id="btnTouchToggle" class="btn">📱 Botões: AUTO</button>
+    <button id="btnPause" class="btn">⏸ Pausa</button>
+    <button id="btnRestartLevel" class="btn">🔄 Nível</button>
+    <button id="btnGoToLevel" class="btn">🎯 Ir para nível</button>
+    <button id="btnRestartGame" class="btn">🔁 Recomeçar</button>
+  </div>
+
+  <!-- MENU SUSPENSO MOBILE -->
+  <div id="teacherMenuPanel">
+    <button id="mBtnFullscreen" class="btn">⛶ Ecrã todo</button>
+    <button id="mBtnTouch"      class="btn">📱 Botões: AUTO</button>
+    <button id="mBtnPause"      class="btn">⏸ Pausa</button>
+    <button id="mBtnLevel"      class="btn">🔄 Nível</button>
+    <button id="mBtnGoToLevel"  class="btn">🎯 Ir para nível</button>
+    <button id="mBtnRestart"    class="btn">🔁 Recomeçar</button>
+  </div>
+
+  <!-- MODAL HISTÓRIA (entre níveis) -->
+  <div id="historyOverlay" class="overlay hidden">
+    <div class="card history-card">
+      <div class="history-header">
+        <span class="history-icon">🎈</span>
+        <div>
+          <h2>Dia da Criança</h2>
+          <p class="history-subtitle">Sabias que…?</p>
+        </div>
+      </div>
+      <p id="historyText" class="history-text"></p>
+      <div class="row">
+        <button id="btnHistory" class="btn primary">Continuar ▶</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- GAME OVER -->
+  <div id="gameOverOverlay" class="overlay hidden">
+    <div class="card gameover-card">
+      <h2>Missão Falhada!</h2>
+      <!-- VanBerto triste -->
+      <div class="gameover-robot-stage" aria-hidden="true">
+        <div class="gameover-tears">💧&nbsp;💧</div>
+        <img class="gameover-robot-img" src="vanberto_voar.png" alt="" />
+        <div class="gameover-robot-shadow"></div>
+      </div>
+      <p class="sub">Ficaste sem vidas! As crianças precisam de ti — não desistas!</p>
+      <div class="row">
+        <button id="btnRetry" class="btn primary">🔄 Tentar de novo</button>
+        <button id="btnExit" class="btn">🏠 Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VITÓRIA FINAL -->
+  <div id="winOverlay" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="card win-card">
+      <div class="win-icon">🏆</div>
+      <h2>Missão Concluída!</h2>
+      <p class="win-name">Parabéns, <span id="winPlayerName">Herói das Crianças</span>!</p>
+
+      <!-- VANBERTO'S ORIGINAL — a flutuar em festa -->
+      <div class="win-robot-stage" aria-hidden="true">
+        <img class="win-robot-img" src="vanberto_voar.png" alt="VanBerto's" />
+        <div class="win-robot-shadow"></div>
+        <div class="win-robot-notes">🎵<span>🎶</span>🎵</div>
+      </div>
+      <div class="win-stats">
+        <div class="win-stat">⭐ <strong id="winScore">0</strong> pontos</div>
+        <div class="win-stat">✅ Respostas certas: <strong id="winPct">—</strong></div>
+        <div class="win-stat win-medal" id="winMedal">🥇 Excelente!</div>
+      </div>
+      <details id="winErrors" style="margin:10px 0;display:none;">
+        <summary style="cursor:pointer;font-weight:700;font-size:12px;color:#ffe0d0;font-style:italic;">📋 Ver erros cometidos</summary>
+        <ul id="winErrorList" style="margin:8px 0 0 16px;font-size:12px;line-height:1.8;color:#ffe0d0;"></ul>
+      </details>
+      <div class="row">
+        <button id="btnWinRestart" class="btn primary">🔄 Jogar de novo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAUSA — overlay informativo -->
+  <div id="pauseInfoOverlay" class="hidden">
+    <div class="pause-card">
+      <p class="pause-title"><span>⏸</span> PAUSA</p>
+      <div class="pause-robot-wrap" aria-hidden="true">
+        <img class="pause-robot-img" src="vanberto_voar.png" alt="" />
+      </div>
+      <div class="pause-info-grid">
+        <div class="pause-info-box">
+          <strong>🎮 Nível</strong>
+          <span class="pause-info-val" id="pauseLevel">—</span>
+        </div>
+        <div class="pause-info-box">
+          <strong>⭐ Pontos</strong>
+          <span class="pause-info-val" id="pauseScore">0</span>
+        </div>
+        <div class="pause-info-box">
+          <strong>❤️ Vidas</strong>
+          <span class="pause-info-val" id="pauseLives">3</span>
+        </div>
+        <div class="pause-info-box">
+          <strong>🏁 Progresso</strong>
+          <span class="pause-info-val" id="pauseProgress">—</span>
+        </div>
+      </div>
+      <div class="pause-tip" id="pauseTip">
+        💡 <b>Dica:</b> Apanha a estrela ⭐ para ativar o <b>Star Power</b> e atropelar vilões durante 8 segundos!
+      </div>
+      <p class="pause-controls-hint">← → andar &nbsp;|&nbsp; ↑ / Espaço saltar &nbsp;|&nbsp; Prima ▶ Continuar para retomar</p>
+    </div>
+  </div>
+
+  <!-- CONFETIS -->
+  <div id="confetti" class="confetti hidden" aria-hidden="true"></div>
+
+  <!-- BOTÕES TOUCH -->
+  <div id="touchControls">
+    <div class="tc-left">
+      <div class="tc-btn-wrap"><button id="btnLeft"  class="touch-btn" aria-label="Mover esquerda">◀</button><span class="tc-label">Esq</span></div>
+      <div class="tc-btn-wrap"><button id="btnRight" class="touch-btn" aria-label="Mover direita">▶</button><span class="tc-label">Dir</span></div>
+    </div>
+    <div class="tc-right">
+      <div class="tc-btn-wrap"><button id="btnJump" class="touch-btn touch-jump" aria-label="Saltar">↑</button><span class="tc-label">Saltar</span></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+  <script src="dia-crianca.js"></script>
+</body>
+</html>
