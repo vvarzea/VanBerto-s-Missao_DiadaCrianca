@@ -1080,8 +1080,11 @@ window.addEventListener("DOMContentLoaded", () => {
   };
 
   function preload() {
-    // Carregar a PNG original do VanBerto's para usar como sprite de jogo
-    this.load.image("vanberto_png", "vanberto_voar.png");
+    // PNG externa desativada: a imagem vanberto_voar.png não é quadrada (420×537px)
+    // e o jogo força-a num quadrado 72×72, o que a deixa esticada/distorcida.
+    // Por isso usamos sempre o robô desenhado em Canvas ("vanberto_open"), que é
+    // o que aparece corretamente tanto localmente como online.
+    // this.load.image("vanberto_png", "vanberto_voar.png");
   }
 
   function initPhaser() {
