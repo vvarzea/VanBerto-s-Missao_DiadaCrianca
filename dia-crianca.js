@@ -128,13 +128,15 @@ window.addEventListener("DOMContentLoaded", () => {
       || !quizOverlay.classList.contains("hidden")
       || !historyOverlay.classList.contains("hidden")
       || !document.getElementById("gameOverOverlay").classList.contains("hidden")
-      || !document.getElementById("winOverlay").classList.contains("hidden");
+      || !document.getElementById("winOverlay").classList.contains("hidden")
+      || !document.getElementById("reviewOverlay").classList.contains("hidden");
     document.body.classList.toggle("overlay-open", anyOpen);
   }
   // Observer para detetar mudanças nos overlays
   const _overlayObserver = new MutationObserver(updateOverlayOpenClass);
   [startOverlay, howOverlay, quizOverlay, historyOverlay,
-   document.getElementById("gameOverOverlay"), document.getElementById("winOverlay")
+   document.getElementById("gameOverOverlay"), document.getElementById("winOverlay"),
+   document.getElementById("reviewOverlay")
   ].forEach(el => { if(el) _overlayObserver.observe(el, { attributes: true, attributeFilter: ["class"] }); });
   updateOverlayOpenClass();
   function saveGame() {
@@ -157,12 +159,12 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===== Quiz stats =====
-  const quizStats = { total:0, correct:0, everWrong:false, errors:[] };
+  const quizStats = { total:0, correct:0, everWrong:false, errors:[], errorsByTheme:{} };
   const usedQuizByLevel = {};
   const usedQuizByTheme = {}; // anti-repetição global por tema (cross-nível)
   let lastQuizTheme = "historia";
 
-  function resetQuizStats() { quizStats.total=0; quizStats.correct=0; quizStats.everWrong=false; quizStats.errors=[]; }
+  function resetQuizStats() { quizStats.total=0; quizStats.correct=0; quizStats.everWrong=false; quizStats.errors=[]; quizStats.errorsByTheme={}; }
 
   function pickQuizForLevel(levelIdx, theme) {
     const pool = QUIZ_BY_THEME[theme] || QUIZ_BY_THEME["historia"];
@@ -184,11 +186,11 @@ window.addEventListener("DOMContentLoaded", () => {
   const HISTORY = [
     {
       title: "🎈 O Dia da Criança — 1 de Junho",
-      text: "O Dia Internacional da Criança celebra-se a 1 de junho em Portugal e em muitos países do mundo. Esta data foi escolhida em 1950 pela Federação Internacional das Mulheres Democráticas, numa conferência em Moscovo. O objetivo era chamar a atenção do mundo para os direitos e o bem-estar das crianças. Em Portugal, o dia é celebrado com festas, prendas e atividades especiais nas escolas."
+      text: "O Dia Internacional da Criança celebra-se a 1 de junho em Portugal e em muitos países do mundo. Esta data foi decidida em 1949 pela Federação Internacional das Mulheres Democráticas, numa conferência em Moscovo, e celebrada pela primeira vez em 1950. O objetivo era chamar a atenção do mundo para os direitos e o bem-estar das crianças. Em Portugal, o dia é celebrado com festas, prendas e atividades especiais nas escolas."
     },
     {
       title: "📜 A Declaração dos Direitos da Criança — 1959",
-      text: "Em 1959, as Nações Unidas aprovaram a Declaração dos Direitos da Criança, com 10 princípios fundamentais. Esta declaração reconhecia que todas as crianças têm direito à proteção, à educação, a um nome e a uma nacionalidade. Foi o primeiro documento internacional dedicado exclusivamente aos direitos das crianças — um passo enorme na história da humanidade!"
+      text: "Em 1959, as Nações Unidas aprovaram a Declaração dos Direitos da Criança, com 10 princípios fundamentais. Esta declaração reconhecia que todas as crianças têm direito à proteção, à educação, a um nome e a uma nacionalidade. Foi o primeiro documento das Nações Unidas dedicado exclusivamente aos direitos das crianças — um passo enorme na história da humanidade!"
     },
     {
       title: "🌍 A Convenção dos Direitos da Criança — 1989",
@@ -256,7 +258,7 @@ window.addEventListener("DOMContentLoaded", () => {
     },
     {
       title: "🌱 O Direito a um Ambiente Saudável",
-      text: "As crianças têm direito a crescer num ambiente limpo e saudável. As alterações climáticas ameaçam este direito: mais de 1 bilião de crianças vive em zonas de risco climático extremo. Os ODS 13 (Ação Climática), 14 (Vida Marinha) e 15 (Vida Terrestre) protegem o futuro das crianças. A voz das crianças pode mudar o mundo — cada pequena ação conta. Separa o lixo, poupa água, planta uma semente. O planeta precisa de ti!"
+      text: "As crianças têm direito a crescer num ambiente limpo e saudável. As alterações climáticas ameaçam este direito: mais de mil milhões de crianças vivem em zonas de risco climático extremo. Os ODS 13 (Ação Climática), 14 (Vida Marinha) e 15 (Vida Terrestre) protegem o futuro das crianças. A voz das crianças pode mudar o mundo — cada pequena ação conta. Separa o lixo, poupa água, planta uma semente. O planeta precisa de ti!"
     },
     {
       title: "💻 Os Direitos Digitais das Crianças",
@@ -309,10 +311,34 @@ window.addEventListener("DOMContentLoaded", () => {
     digital:      "Os direitos digitais das crianças aplicam os artigos da Convenção ao mundo online e às redes sociais."
   };
 
+  // ===== Artigo da Convenção por tema =====
+  const QUIZ_ARTICLE = {
+    historia:     null,
+    declaracao:   null,
+    convencao:    null,
+    brincar:      "Art. 31.º",
+    educacao:     "Art. 28.º",
+    saude:        "Art. 24.º",
+    protecao:     "Art. 19.º / 37.º",
+    participacao: "Art. 12.º",
+    futuro:       "ODS 2030",
+    unicef:       null,
+    identidade:   "Art. 7.º",
+    familia:      "Art. 9.º / 10.º",
+    refugiados:   "Art. 22.º",
+    trabalho:     "Art. 32.º",
+    expressao:    "Art. 13.º",
+    privacidade:  "Art. 16.º",
+    cultura:      "Art. 30.º",
+    deficiencia:  "Art. 23.º",
+    ambiente:     "ODS 13-15",
+    digital:      "Art. 16.º / 17.º"
+  };
+
   // ===== Perguntas — 3 opções, 1 certa + explicação =====
   const QUIZ_BY_THEME = {
     historia: [
-      { q:"Em que data se celebra o Dia da Criança em Portugal?", a:[{t:"1 de junho",ok:true},{t:"1 de maio",ok:false},{t:"20 de novembro",ok:false}], exp:"O Dia Internacional da Criança celebra-se a 1 de junho. Esta data foi escolhida em 1950. O 20 de novembro é o Dia Universal da Criança, data em que foi aprovada a Convenção dos Direitos da Criança." },
+      { q:"Em que data se celebra o Dia da Criança em Portugal?", a:[{t:"1 de junho",ok:true},{t:"1 de maio",ok:false},{t:"20 de novembro",ok:false}], exp:"O Dia Internacional da Criança celebra-se a 1 de junho. Esta data foi decidida em novembro de 1949 e celebrada pela primeira vez em 1950. O 20 de novembro é o Dia Universal da Criança, data em que foi aprovada a Convenção dos Direitos da Criança." },
       { q:"Quem escolheu o 1 de junho como Dia da Criança, em 1949?", a:[{t:"A Federação Democrática Internacional das Mulheres",ok:true},{t:"As Nações Unidas",ok:false},{t:"A UNICEF",ok:false}], exp:"A 4 de novembro de 1949, em Moscovo, a Federação Democrática Internacional das Mulheres estabeleceu o 1 de junho como Dia Internacional de Proteção das Crianças. A data começou a ser celebrada a partir de 1950." },
       { q:"Qual é o objetivo do Dia da Criança?", a:[{t:"Celebrar e defender os direitos e o bem-estar das crianças",ok:true},{t:"Assinalar o fim do ano letivo",ok:false},{t:"Comemorar o início do verão",ok:false}], exp:"O Dia da Criança serve para lembrar que todas as crianças têm direitos — à educação, à saúde, ao brincar e à proteção — e que é responsabilidade de todos garantir esses direitos." },
       { q:"Em que ano surgiu o primeiro Dia da Criança?", a:[{t:"1950",ok:true},{t:"1989",ok:false},{t:"1945",ok:false}], exp:"O Dia Internacional da Criança surgiu em 1950, cinco anos após o fim da Segunda Guerra Mundial, num período em que o mundo tentava reconstruir-se e proteger as gerações mais novas." },
@@ -383,7 +409,7 @@ window.addEventListener("DOMContentLoaded", () => {
     unicef: [
       { q:"Em que ano foi criada a UNICEF?", a:[{t:"1946",ok:true},{t:"1959",ok:false},{t:"1989",ok:false}], exp:"A UNICEF foi criada a 11 de dezembro de 1946, pela Assembleia Geral das Nações Unidas, para ajudar as crianças afetadas pela Segunda Guerra Mundial. 'UNICEF' vem de 'United Nations International Children's Emergency Fund'." },
       { q:"Em quantos países trabalha a UNICEF?", a:[{t:"Mais de 190 países e territórios",ok:true},{t:"Apenas 50 países",ok:false},{t:"Só nos países mais ricos",ok:false}], exp:"A UNICEF está presente em mais de 190 países e territórios — ou seja, praticamente em todo o mundo. A sua presença é especialmente importante em zonas de conflito e em países com muita pobreza." },
-      { q:"O que significa a sigla UNICEF?", a:[{t:"Fundo Internacional de Emergência das Nações Unidas para as Crianças",ok:true},{t:"União Internacional de Crianças e Famílias",ok:false},{t:"Unidade Nacional de Cuidados de Emergência para a Família",ok:false}], exp:"UNICEF vem do inglês 'United Nations International Children's Emergency Fund'. Foi criada como fundo de emergência e hoje é a principal organização mundial dedicada aos direitos e ao bem-estar das crianças." },
+      { q:"O que significa a sigla UNICEF?", a:[{t:"Fundo das Nações Unidas para a Infância",ok:true},{t:"União Internacional de Crianças e Famílias",ok:false},{t:"Unidade Nacional de Cuidados de Emergência para a Família",ok:false}], exp:"UNICEF vem do inglês 'United Nations Children's Fund' — o nome foi encurtado em 1953, mantendo o acrónimo. Em português, o nome oficial é Fundo das Nações Unidas para a Infância. Foi criada em 1946 como fundo de emergência e é hoje a principal organização mundial dedicada aos direitos das crianças." },
       { q:"O que faz o Comité Português da UNICEF?", a:[{t:"Sensibiliza para os direitos das crianças e angaria fundos para programas no mundo",ok:true},{t:"Gere hospitais pediátricos em Portugal",ok:false},{t:"Substitui o Estado na proteção das crianças portuguesas",ok:false}], exp:"O Comité Português da UNICEF é uma organização não governamental que trabalha em Portugal para consciencializar a sociedade sobre os direitos das crianças e para angariar donativos que financiam programas da UNICEF em todo o mundo." },
       { q:"Qual é um dos principais programas de nutrição da UNICEF para crianças em risco?", a:[{t:"Distribuição de alimentos terapêuticos prontos a usar (RUTF) para desnutrição severa",ok:true},{t:"Vales de desconto em supermercados de países ricos",ok:false},{t:"Distribuição de vitaminas apenas em hospitais privados",ok:false}], exp:"O RUTF (Ready-to-Use Therapeutic Food) é uma pasta nutritiva que a UNICEF distribui em zonas de crise para tratar a desnutrição aguda severa em crianças. É barato, não precisa de refrigeração e salva milhões de vidas por ano." },
       { q:"O 20 de novembro é o Dia Universal da Criança — porquê esta data?", a:[{t:"Porque foi nesse dia de 1989 que a Convenção dos Direitos da Criança foi aprovada",ok:true},{t:"Porque foi o aniversário da fundação da UNICEF",ok:false},{t:"Porque é o dia em que a ONU foi criada",ok:false}], exp:"A 20 de novembro de 1989, a Assembleia Geral das ONU adotou a Convenção sobre os Direitos da Criança. Por isso, esta data é celebrada como Dia Universal da Criança em todo o mundo — um momento para refletir sobre os direitos e o bem-estar das crianças." }
@@ -418,7 +444,7 @@ window.addEventListener("DOMContentLoaded", () => {
       { q:"Qual é a idade mínima geral para trabalhar em Portugal?", a:[{t:"16 anos",ok:true},{t:"14 anos",ok:false},{t:"18 anos",ok:false}], exp:"Em Portugal, a idade mínima geral para trabalhar é 16 anos. Menores de 16 anos só podem trabalhar em situações muito específicas (como participar em espetáculos culturais) e com autorização dos pais e autoridades." },
       { q:"O que distingue o trabalho infantil perigoso de uma pequena ajuda em casa?", a:[{t:"O trabalho perigoso prejudica a saúde, a educação e o desenvolvimento da criança",ok:true},{t:"Qualquer trabalho feito por uma criança é automaticamente exploração",ok:false},{t:"Só é ilegal se a criança não receber salário",ok:false}], exp:"A OIT distingue entre trabalho aceitável (pequenas tarefas que não prejudicam o desenvolvimento) e trabalho infantil (que priva a criança da infância, interfere com a escola ou é perigoso para a saúde). O contexto e o impacto são decisivos." },
       { q:"Em que setores é mais comum o trabalho infantil no mundo?", a:[{t:"Agricultura, minas, construção e trabalho doméstico",ok:true},{t:"Apenas nas fábricas têxteis da Ásia",ok:false},{t:"Só em países sem leis laborais",ok:false}], exp:"A maioria do trabalho infantil ocorre na agricultura (72%), seguida de minas, pedreiras, construção e trabalho doméstico em casas de terceiros. Estas atividades são perigosas para a saúde física e mental das crianças." },
-      { q:"Qual organização internacional lidera o combate ao trabalho infantil a nível global?", a:[{t:"OIT — Organização Internacional do Trabalho",ok:true},{t:"INTERPOL",ok:false},{t:"Banco Mundial",ok:false}], exp:"A OIT lidera o programa IPEC (Programa Internacional para a Eliminação do Trabalho Infantil) e define normas internacionais, como a Convenção n.º 182, que proíbe as piores formas de trabalho infantil e foi ratificada por todos os países membros da ONU." }
+      { q:"Qual organização internacional lidera o combate ao trabalho infantil a nível global?", a:[{t:"OIT — Organização Internacional do Trabalho",ok:true},{t:"INTERPOL",ok:false},{t:"Banco Mundial",ok:false}], exp:"A OIT lidera o programa IPEC (Programa Internacional para a Eliminação do Trabalho Infantil) e define normas internacionais, como a Convenção n.º 182, que proíbe as piores formas de trabalho infantil e foi ratificada por todos os membros da OIT." }
     ],
     expressao: [
       { q:"Qual é o artigo da Convenção que garante a liberdade de expressão?", a:[{t:"Artigo 13.º",ok:true},{t:"Artigo 12.º",ok:false},{t:"Artigo 17.º",ok:false}], exp:"O artigo 13.º garante às crianças o direito de procurar, receber e transmitir informações e ideias — oralmente, por escrito, através da arte ou de qualquer outro meio — desde que não prejudiquem os outros." },
@@ -454,7 +480,7 @@ window.addEventListener("DOMContentLoaded", () => {
     ],
     ambiente: [
       { q:"Existe um artigo específico sobre o direito ao ambiente na Convenção de 1989?", a:[{t:"Não diretamente, mas os ODS e comentários gerais reconhecem este direito",ok:true},{t:"Sim, é o artigo 29.º",ok:false},{t:"Sim, foi acrescentado em 2010",ok:false}], exp:"A Convenção de 1989 não tem um artigo específico sobre ambiente, mas o Comité dos Direitos da Criança reconhece nos seus comentários gerais que as alterações climáticas e a degradação ambiental ameaçam todos os direitos das crianças. Os ODS 13, 14 e 15 abordam estes temas." },
-      { q:"Como afetam as alterações climáticas os direitos das crianças?", a:[{t:"Ameaçam o direito à saúde, à alimentação, à água e a um futuro seguro",ok:true},{t:"Não afetam significativamente as crianças",ok:false},{t:"Só afetam crianças que vivem em zonas costeiras",ok:false}], exp:"As alterações climáticas afetam desproporcionalmente as crianças: aumentam doenças respiratórias, reduzem o acesso a água potável e alimentos, causam deslocamentos forçados e comprometem o seu direito a um futuro seguro. A UNICEF alerta que 1 bilião de crianças vive em zonas de risco extremo." },
+      { q:"Como afetam as alterações climáticas os direitos das crianças?", a:[{t:"Ameaçam o direito à saúde, à alimentação, à água e a um futuro seguro",ok:true},{t:"Não afetam significativamente as crianças",ok:false},{t:"Só afetam crianças que vivem em zonas costeiras",ok:false}], exp:"As alterações climáticas afetam desproporcionalmente as crianças: aumentam doenças respiratórias, reduzem o acesso a água potável e alimentos, causam deslocamentos forçados e comprometem o seu direito a um futuro seguro. A UNICEF alerta que mais de mil milhões de crianças vivem em zonas de risco extremo." },
       { q:"O que pode cada criança fazer para ajudar o ambiente?", a:[{t:"Reduzir desperdícios, poupar energia, plantar árvores e sensibilizar outros",ok:true},{t:"Nada — só os governos e empresas podem fazer diferença",ok:false},{t:"Deixar de ir à escola para protestar",ok:false}], exp:"Cada criança pode contribuir: separar o lixo, poupar água e energia, escolher produtos sustentáveis, plantar plantas, comer menos carne e sensibilizar família e amigos. As pequenas ações individuais, multiplicadas por milhões, fazem diferença." },
       { q:"O que significa a sigla ODS?", a:[{t:"Objetivos de Desenvolvimento Sustentável",ok:true},{t:"Organização dos Direitos Sociais",ok:false},{t:"Ordem de Defesa da Sustentabilidade",ok:false}], exp:"Os ODS (Objetivos de Desenvolvimento Sustentável) são 17 metas aprovadas pelas Nações Unidas em 2015 para tornar o mundo melhor até 2030. Os ODS 13 (Ação Climática), 14 (Vida Marinha) e 15 (Vida Terrestre) protegem diretamente o ambiente onde as crianças crescem." },
       { q:"O que é a 'pegada ecológica'?", a:[{t:"A quantidade de recursos naturais que cada pessoa consome",ok:true},{t:"O rasto de sujidade que deixamos no chão",ok:false},{t:"O número de animais que existem numa floresta",ok:false}], exp:"A pegada ecológica mede os recursos naturais (água, terra, energia) que cada pessoa usa. Se toda a humanidade vivesse como um europeu médio, precisaríamos de 3 planetas! Reduzir a nossa pegada — consumindo menos, reciclando e poupando energia — é essencial para preservar o planeta para as gerações futuras." },
@@ -469,23 +495,33 @@ window.addEventListener("DOMContentLoaded", () => {
       { q:"O que é a literacia digital?", a:[{t:"A capacidade de usar a tecnologia de forma segura, crítica e responsável",ok:true},{t:"Saber escrever código de programação",ok:false},{t:"Ter muitos seguidores nas redes sociais",ok:false}], exp:"A literacia digital é o conjunto de competências que permitem usar a internet e a tecnologia de forma segura, criativa e crítica: distinguir informação verdadeira de falsa, proteger os dados pessoais, comunicar com respeito e aproveitar as oportunidades digitais para aprender." },
       { q:"O que é o phishing e como se protege uma criança?", a:[{t:"É uma tentativa de enganar para obter dados pessoais — não clicar em links suspeitos",ok:true},{t:"É um jogo de pesca online muito popular",ok:false},{t:"É um vírus que apaga os ficheiros do computador",ok:false}], exp:"Phishing é quando alguém finge ser uma entidade de confiança (banco, escola, plataforma) para roubar palavras-passe ou dados pessoais. A proteção passa por não clicar em links suspeitos, não partilhar palavras-passe e contar sempre a um adulto se algo parecer errado." },
       { q:"O que são 'fake news' e como podemos identificá-las?", a:[{t:"São notícias falsas — verifica a fonte, a data e procura outras referências",ok:true},{t:"São notícias sobre acontecimentos futuros",ok:false},{t:"São notícias publicadas apenas nas redes sociais",ok:false}], exp:"Fake news são notícias falsas ou enganosas criadas para manipular opiniões. Para as identificar: verifica se a fonte é credível, procura a mesma notícia em vários meios, verifica a data e desconfia de títulos muito chocantes. O pensamento crítico é a melhor defesa contra a desinformação." },
-      { q:"Qual linha de apoio podes contactar em Portugal se tiveres um problema online?", a:[{t:"Linha Internet Segura: 1800 21 22 23",ok:true},{t:"Linha SOS Criança: 116 000",ok:false},{t:"Linha de Saúde: 808 24 24 24",ok:false}], exp:"A Linha Internet Segura (1800 21 22 23) é gratuita, disponível em Portugal e apoia crianças e jovens com problemas online: ciberbullying, conteúdos perturbadores, assédio ou outros incidentes digitais. Podes também denunciar conteúdos ilegais em www.internetsegura.pt." }
+      { q:"Qual linha de apoio podes contactar em Portugal se tiveres um problema online?", a:[{t:"Linha Internet Segura: 1800 21 22 23",ok:true},{t:"Linha de Apoio à Vítima: 116 006",ok:false},{t:"Linha de Saúde: 808 24 24 24",ok:false}], exp:"A Linha Internet Segura (1800 21 22 23) é gratuita, disponível em Portugal e apoia crianças e jovens com problemas online: ciberbullying, conteúdos perturbadores, assédio ou outros incidentes digitais. Podes também denunciar conteúdos ilegais em www.internetsegura.pt." }
     ]
   };
 
   // ===== TEMAS visuais — colorido e alegre =====
   const THEMES = [
-    { skyTop:0x1a6ab5, skyBot:0x8ed6f8, hillColor:0x2e9e52, grassTop:0x44cc6a }, // céu azul rico
-    { skyTop:0x3d1466, skyBot:0xff8c40, hillColor:0xbf3c0f, grassTop:0xd95210 }, // crepúsculo roxo-laranja
-    { skyTop:0x006680, skyBot:0x50e8e0, hillColor:0x0a7a6a, grassTop:0x18c0b0 }, // aqua profundo
-    { skyTop:0xc02880, skyBot:0xffb8d8, hillColor:0xd0408a, grassTop:0xf060aa }, // rosa vibrante
-    { skyTop:0x1a0060, skyBot:0xb060ff, hillColor:0x5010a0, grassTop:0x7830d8 }, // lilás noturno
-    { skyTop:0x004060, skyBot:0x10d4cc, hillColor:0x006868, grassTop:0x00b0a8 }, // turquesa (era verde brilhante)
-    { skyTop:0x7a2000, skyBot:0xffb060, hillColor:0xd05010, grassTop:0xf07030 }, // laranja quente
-    { skyTop:0x001a5a, skyBot:0x2090e8, hillColor:0x0050a0, grassTop:0x1878d0 }, // azul noturno vivo
-    { skyTop:0x5a0030, skyBot:0xff80b8, hillColor:0xb02070, grassTop:0xd83090 }, // magenta rico
-    { skyTop:0x0a2010, skyBot:0x40b858, hillColor:0x1a5e2a, grassTop:0x28904a }, // floresta (era verde lima)
-    { skyTop:0xff6a1a, skyBot:0xffe39a, hillColor:0xe0871a, grassTop:0x5ec85a }, // 10 · FINAL festivo — pôr-do-sol dourado
+    // ── 20 paletas únicas — uma por nível ──────────────────────────
+    { skyTop:0x1a6ab5, skyBot:0x8ed6f8, hillColor:0x2e9e52, grassTop:0x44cc6a }, //  0 · Nível  1 — azul rico de manhã
+    { skyTop:0x3d1466, skyBot:0xff8c40, hillColor:0xbf3c0f, grassTop:0xd95210 }, //  1 · Nível  2 — crepúsculo roxo-laranja
+    { skyTop:0x006680, skyBot:0x50e8e0, hillColor:0x0a7a6a, grassTop:0x18c0b0 }, //  2 · Nível  3 — aqua tropical
+    { skyTop:0xc02880, skyBot:0xffb8d8, hillColor:0xd0408a, grassTop:0xf060aa }, //  3 · Nível  4 — rosa vibrante
+    { skyTop:0x1a0060, skyBot:0xb060ff, hillColor:0x5010a0, grassTop:0x7830d8 }, //  4 · Nível  5 — lilás noturno 🌙
+    { skyTop:0x7a2000, skyBot:0xffb060, hillColor:0xd05010, grassTop:0xf07030 }, //  5 · Nível  6 — laranja quente pôr-do-sol
+    { skyTop:0x001a5a, skyBot:0x2090e8, hillColor:0x0050a0, grassTop:0x1878d0 }, //  6 · Nível  7 — azul noturno profundo 🌙
+    { skyTop:0x5a0030, skyBot:0xff80b8, hillColor:0xb02070, grassTop:0xd83090 }, //  7 · Nível  8 — magenta rico 🌙
+    { skyTop:0x0a2010, skyBot:0x40b858, hillColor:0x1a5e2a, grassTop:0x28904a }, //  8 · Nível  9 — floresta verde profunda
+    { skyTop:0x5a1a00, skyBot:0xffcc60, hillColor:0xc06010, grassTop:0xe08020 }, //  9 · Nível 10 — âmbar dourado
+    { skyTop:0x1a3a00, skyBot:0x90e840, hillColor:0x2e7a10, grassTop:0x4ab020 }, // 10 · Nível 11 — verde lima primavera
+    { skyTop:0x001a3a, skyBot:0x4090d0, hillColor:0x004a80, grassTop:0x1060a8 }, // 11 · Nível 12 — azul oceano 🌙
+    { skyTop:0x2a0050, skyBot:0xe060ff, hillColor:0x6010b0, grassTop:0x8030d0 }, // 12 · Nível 13 — violeta mágico 🌙
+    { skyTop:0x004040, skyBot:0x20d8c0, hillColor:0x006858, grassTop:0x10a898 }, // 13 · Nível 14 — teal escuro 🌙
+    { skyTop:0x002850, skyBot:0x60c0ff, hillColor:0x005090, grassTop:0x1080c0 }, // 14 · Nível 15 — azul celeste
+    { skyTop:0x603000, skyBot:0xffd060, hillColor:0xb05800, grassTop:0xe07800 }, // 15 · Nível 16 — castanho-ouro (terra)
+    { skyTop:0x1a0828, skyBot:0xa040e8, hillColor:0x4a1090, grassTop:0x6820b8 }, // 16 · Nível 17 — índigo cósmico 🌙
+    { skyTop:0x003820, skyBot:0x40e870, hillColor:0x106030, grassTop:0x20a050 }, // 17 · Nível 18 — verde floresta 🌙
+    { skyTop:0x600010, skyBot:0xff5040, hillColor:0xa02020, grassTop:0xd03030 }, // 18 · Nível 19 — vermelho escarlate 🌙
+    { skyTop:0xff6a1a, skyBot:0xffe39a, hillColor:0xe0871a, grassTop:0x5ec85a }, // 19 · Nível 20 — FINAL festivo pôr-do-sol dourado
   ];
 
   // ===== Níveis (10) =====
@@ -687,7 +723,7 @@ window.addEventListener("DOMContentLoaded", () => {
     },
     {
       name: "Nível 11 — O Direito à Identidade",
-      theme:0, quizTheme:"identidade", worldW:3600,
+      theme:10, quizTheme:"identidade", worldW:3600,
       spawn:{x:480,y:460}, doorX:3200,
       // Layout: "escadinhas duplas" — dois picos com vale ao meio
       platforms:[
@@ -710,7 +746,7 @@ window.addEventListener("DOMContentLoaded", () => {
     },
     {
       name: "Nível 12 — O Direito à Família",
-      theme:1, quizTheme:"familia", worldW:3650,
+      theme:11, quizTheme:"familia", worldW:3650,
       spawn:{x:480,y:460}, doorX:3340,
       // Layout: "mini-mundos" — 3 grupos de plataformas isolados com vãos entre eles
       platforms:[
@@ -738,7 +774,7 @@ window.addEventListener("DOMContentLoaded", () => {
     },
     {
       name: "Nível 13 — Os Direitos dos Refugiados",
-      theme:2, quizTheme:"refugiados", worldW:3700,
+      theme:12, quizTheme:"refugiados", worldW:3700,
       spawn:{x:480,y:460}, doorX:3300,
       // Layout: "labirinto horizontal" — plataformas em ziguezague apertado exige precisão
       platforms:[
@@ -764,7 +800,7 @@ window.addEventListener("DOMContentLoaded", () => {
     },
     {
       name: "Nível 14 — Contra o Trabalho Infantil",
-      theme:3, quizTheme:"trabalho", worldW:3750,
+      theme:13, quizTheme:"trabalho", worldW:3750,
       spawn:{x:480,y:460}, doorX:3350,
       platforms:[
         {x:520,y:520,w:960,h:28},
@@ -801,7 +837,7 @@ window.addEventListener("DOMContentLoaded", () => {
     },
     {
       name: "Nível 15 — O Direito à Expressão",
-      theme:4, quizTheme:"expressao", worldW:3800,
+      theme:14, quizTheme:"expressao", worldW:3800,
       spawn:{x:480,y:460}, doorX:3400,
       platforms:[
         {x:520,y:520,w:1000,h:28},{x:980,y:432,w:160,h:22},{x:1260,y:350,w:160,h:22},
@@ -821,7 +857,7 @@ window.addEventListener("DOMContentLoaded", () => {
     },
     {
       name: "Nível 16 — O Direito à Privacidade",
-      theme:5, quizTheme:"privacidade", worldW:3850,
+      theme:15, quizTheme:"privacidade", worldW:3850,
       spawn:{x:480,y:460}, doorX:3450,
       // Layout: "degraus duplos" — sobe dois andares, desce dois andares, plataformas estreitas
       platforms:[
@@ -849,7 +885,7 @@ window.addEventListener("DOMContentLoaded", () => {
     },
     {
       name: "Nível 17 — O Direito à Cultura",
-      theme:6, quizTheme:"cultura", worldW:3900,
+      theme:16, quizTheme:"cultura", worldW:3900,
       spawn:{x:480,y:460}, doorX:3500,
       // Layout: "cultura em círculos" — plataformas em grupos de 3 como constelações
       platforms:[
@@ -880,7 +916,7 @@ window.addEventListener("DOMContentLoaded", () => {
     },
     {
       name: "Nível 18 — O Direito à Inclusão",
-      theme:7, quizTheme:"deficiencia", worldW:3950,
+      theme:17, quizTheme:"deficiencia", worldW:3950,
       spawn:{x:480,y:460}, doorX:3550,
       // ══ MECÂNICA ESPECIAL: ESTEIRA — PLATAFORMAS TODAS EM MOVIMENTO ══
       // Todas as plataformas intermédias se movem. Umas horizontalmente (esq/dir),
@@ -924,7 +960,7 @@ window.addEventListener("DOMContentLoaded", () => {
     },
     {
       name: "Nível 19 — O Direito ao Ambiente",
-      theme:8, quizTheme:"ambiente", worldW:4000,
+      theme:18, quizTheme:"ambiente", worldW:4000,
       spawn:{x:480,y:460}, doorX:3600,
       // Layout: "floresta" — muitas plataformas pequenas a alturas variadas, como ramos de árvores
       platforms:[
@@ -956,7 +992,7 @@ window.addEventListener("DOMContentLoaded", () => {
     },
     {
       name: "Nível 20 — Os Direitos Digitais",
-      theme:10, quizTheme:"digital", worldW:4100,
+      theme:19, quizTheme:"digital", worldW:4100,
       spawn:{x:480,y:460}, doorX:3700,
       // Layout: "circuito digital" — plataformas em padrão de circuito impresso: retas longas com viragens bruscas
       platforms:[
@@ -1040,8 +1076,13 @@ window.addEventListener("DOMContentLoaded", () => {
       autoCenter: Phaser.Scale.CENTER_BOTH,
       width: 960, height: 540
     },
-    scene: { create, update }
+    scene: { preload, create, update }
   };
+
+  function preload() {
+    // Carregar a PNG original do VanBerto's para usar como sprite de jogo
+    this.load.image("vanberto_png", "vanberto_voar.png");
+  }
 
   function initPhaser() {
     if (window.__dc_game) return;
@@ -1066,10 +1107,8 @@ window.addEventListener("DOMContentLoaded", () => {
     // HUD
     hudText      = this.add.text(14, 10, "", { fontSize:"16px", fontStyle:"900", color:"#fff5e0", stroke:"#200040", strokeThickness:4 }).setScrollFactor(0).setDepth(100);
     scoreText    = this.add.text(14, 32, "", { fontSize:"14px", fontStyle:"900", color:"#ffd700", stroke:"#200040", strokeThickness:3 }).setScrollFactor(0).setDepth(100);
-    // Nome do jogador — ao lado dos pontos
-    playerNameHUD = this.add.text(175, 32, "", {
-      fontSize:"14px", fontStyle:"900", color:"#ff80c0", stroke:"#200040", strokeThickness:3
-    }).setScrollFactor(0).setDepth(103).setOrigin(0,0);
+    // Nome do jogador — elemento HTML fixo (não Phaser), acima de tudo
+    playerNameHUD = document.getElementById("playerNameHtml");
     heartsGfx    = this.add.graphics().setScrollFactor(0).setDepth(100);
     tipText      = this.add.text(14, 74, "", { fontSize:"13px", fontStyle:"800", color:"#ff6b35", stroke:"#fff5e0", strokeThickness:3 }).setScrollFactor(0).setDepth(100);
     itemCountText= this.add.text(14, 92, "", { fontSize:"12px", fontStyle:"800", color:"#fff5e0", stroke:"#200040", strokeThickness:2 }).setScrollFactor(0).setDepth(100);
@@ -1097,10 +1136,26 @@ window.addEventListener("DOMContentLoaded", () => {
     itemsGroup   = this.physics.add.group({ allowGravity:false });
     malwareGroup = this.physics.add.group();
 
-    player = this.physics.add.sprite(480, 460, "vanberto_open");
+    // Usar a PNG original do VanBerto's como sprite de jogo se disponível,
+    // senão cair no Canvas gerado como fallback
+    const vanKey = this.textures.exists("vanberto_png") ? "vanberto_png" : "vanberto_open";
+    player = this.physics.add.sprite(480, 460, vanKey);
+    // Redimensionar a PNG para 72×72 no jogo (tamanho visual idêntico ao Canvas anterior)
+    if (vanKey === "vanberto_png") {
+      player.setDisplaySize(72, 72);
+      player.body.setSize(44, 52);
+      player.body.setOffset(
+        (player.width  - 44) / 2,
+        (player.height - 52) / 2 + 4
+      );
+    } else {
+      player.setCollideWorldBounds(true);
+      player.body.setSize(44, 48);
+      player.body.setOffset(26, 46);
+    }
     player.setCollideWorldBounds(true);
-    player.body.setSize(44, 48);
-    player.body.setOffset(26, 46);
+    // Guardar se está a usar a PNG para ajustar animações
+    player.setData("usingPng", vanKey === "vanberto_png");
 
     this.physics.add.collider(player, platforms);
     this.physics.add.overlap(player, itemsGroup, onCollectItem, null, this);
@@ -1135,6 +1190,10 @@ window.addEventListener("DOMContentLoaded", () => {
         pausedByTeacher=false; btnPause.textContent="⏸ Pausa"; showPauseScreen(false);
         quizOverlay.classList.add("hidden"); btnCloseQuiz.classList.add("hidden");
         historyOverlay.classList.add("hidden");
+        // Matar todos os tweens pendentes (porta e robot) para evitar que callbacks antigos
+        // disparem showQuiz no nível novo se o botão for pressionado durante a animação da porta
+        try { sceneRef.tweens.killAll(); } catch {}
+        _doorAnimRunning = false;
         touch.left=touch.right=touch.jump=false;
         loadLevel(sceneRef,currentLevel);
         showHistory(currentLevel, () => { awaitingQuiz=false; if(!pausedByTeacher) sceneRef.physics.resume(); });
@@ -1148,6 +1207,9 @@ window.addEventListener("DOMContentLoaded", () => {
         pausedByTeacher=false; btnPause.textContent="⏸ Pausa"; showPauseScreen(false);
         quizOverlay.classList.add("hidden"); btnCloseQuiz.classList.add("hidden");
         historyOverlay.classList.add("hidden");
+        // Matar todos os tweens pendentes antes de reiniciar
+        try { sceneRef.tweens.killAll(); } catch {}
+        _doorAnimRunning = false;
         touch.left=touch.right=touch.jump=false;
         score=0; lives=3; livesLostThisLevel=0;
         resetQuizStats(); Object.keys(usedQuizByLevel).forEach(k=>usedQuizByLevel[k].clear()); Object.keys(usedQuizByTheme).forEach(k=>usedQuizByTheme[k].clear());
@@ -1234,7 +1296,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const PAUSE_TIPS = [
     "💡 <b>Star Power:</b> Apanha a estrela ⭐ para atropelar vilões durante 8 segundos e ganhar +50 pontos cada!",
     "🛡️ <b>Escudo:</b> Fica invencível por 8s e absorve um golpe de qualquer vilão.",
-    "🦅 <b>Asas:</b> Permitem fazer um segundo salto no ar — óptimo para plataformas altas!",
+    "🦅 <b>Asas:</b> Permitem fazer um segundo salto no ar — ótimo para plataformas altas!",
     "❓ <b>Bloco surpresa:</b> Passa por cima dos blocos <b>❓</b> para revelar itens escondidos!",
     "🟠 <b>Trampolim:</b> Salta numa plataforma laranja para voar muito mais alto que o normal.",
     "🥇 <b>Bónus:</b> Completa um nível sem perder nenhuma vida para ganhar +50 pontos extra!",
@@ -1365,7 +1427,7 @@ window.addEventListener("DOMContentLoaded", () => {
       player.setVelocityX(0); applyVanBertoTexture(sceneRef); updateShadow(); return;
     }
     // Watchdog: se nenhum overlay está aberto e a física está pausada sem razão, retomá-la
-    if (!pausedByTeacher && !awaitingStory && sceneRef.physics.world.isPaused) {
+    if (!pausedByTeacher && !awaitingStory && !awaitingQuiz && sceneRef.physics.world.isPaused) {
       sceneRef.physics.resume();
     }
     const speed=powered?320:280;
@@ -1376,7 +1438,14 @@ window.addEventListener("DOMContentLoaded", () => {
     else if (rightDown&&!leftDown) { player.setVelocityX(speed); player.setFlipX(false); player.setAngle(2); }
     else { player.setVelocityX(0); player.setAngle(0); }
     // Só aplica escala se não estiver a piscar (invuln) para não interromper o tween de alpha
-    if(!invuln) player.setScale(powered?1.18:1.0);
+    if(!invuln){
+      if(player.getData("usingPng")){
+        const ps = powered ? 72*1.18 : 72;
+        player.setDisplaySize(ps, ps);
+      } else {
+        player.setScale(powered?1.18:1.0);
+      }
+    }
 
     // ── COYOTE TIME + BUFFER DE SALTO ────────────────────────────
     const now=sceneRef.time.now;
@@ -1491,7 +1560,7 @@ window.addEventListener("DOMContentLoaded", () => {
     drawSun(sunAngle);
 
     // Animar estrelas noturnas (piscar)
-    if(LEVELS[currentLevel]&&LEVELS[currentLevel].theme>=4&&LEVELS[currentLevel].theme<10)
+    if(LEVELS[currentLevel]&&NIGHT_THEMES.has(LEVELS[currentLevel].theme))
       drawStars(LEVELS[currentLevel].theme, LEVELS[currentLevel].worldW||2600);
 
     // Animar nuvens
@@ -2368,7 +2437,13 @@ window.addEventListener("DOMContentLoaded", () => {
     clearSecrets();         spawnSecrets(scene,L);
     clearHazards();         spawnHazards(scene,L);
 
-    player.setAlpha(0); player.setScale(0.6); player.setAngle(0); player.setFlipX(false); player.setOrigin(0.5,0.5); player.setDepth(3);
+    player.setAlpha(0); player.setAngle(0); player.setFlipX(false); player.setOrigin(0.5,0.5); player.setDepth(3);
+    // PNG mode: preservar displaySize; Canvas mode: usar setScale
+    if(player.getData("usingPng")){
+      player.setDisplaySize(72 * 0.6, 72 * 1.3); // começa pequeno e achatado (pop de entrada)
+    } else {
+      player.setScale(0.6);
+    }
     player.setPosition(L.spawn.x, L.spawn.y); player.setVelocity(0, 0);
     if (player.body) player.body.reset(L.spawn.x, L.spawn.y); // forçar corpo físico para o spawn imediatamente
     // Snap instantâneo da câmara para o spawn, depois repor lerp suave para o jogo
@@ -2379,18 +2454,29 @@ window.addEventListener("DOMContentLoaded", () => {
     // Robot aparece com fade-in e pequeno "pop" no início do nível seguinte
     scene.time.delayedCall(80,()=>{
       snapPlayerToGround();
-      scene.tweens.add({
-        targets: player,
-        alpha: { from: 0, to: 1 },
-        scaleX: { from: 0.6, to: 1 },
-        scaleY: { from: 1.3, to: 1 },
-        duration: 320, ease: "Back.easeOut",
-        onComplete: () => {
-          // Só aplica o saltinho de entrada se a física já estiver ativa
-          // (pode estar pausada se showHistory ainda não foi dispensada)
-          if (sceneRef && !sceneRef.physics.world.isPaused) player.setVelocityY(-160);
-        }
-      });
+      if(player.getData("usingPng")){
+        scene.tweens.add({
+          targets: player,
+          alpha: { from: 0, to: 1 },
+          displayWidth:  { from: 72*0.6, to: 72 },
+          displayHeight: { from: 72*1.3, to: 72 },
+          duration: 320, ease: "Back.easeOut",
+          onComplete: () => {
+            if (sceneRef && !sceneRef.physics.world.isPaused) player.setVelocityY(-160);
+          }
+        });
+      } else {
+        scene.tweens.add({
+          targets: player,
+          alpha: { from: 0, to: 1 },
+          scaleX: { from: 0.6, to: 1 },
+          scaleY: { from: 1.3, to: 1 },
+          duration: 320, ease: "Back.easeOut",
+          onComplete: () => {
+            if (sceneRef && !sceneRef.physics.world.isPaused) player.setVelocityY(-160);
+          }
+        });
+      }
     });
 
     const TIPS = [
@@ -2553,6 +2639,10 @@ window.addEventListener("DOMContentLoaded", () => {
     updateHearts();
     itemCountText.setText(`⭐ Itens: ${itemsCollected}/${itemsTotal}`);
     if(powerIndicator&&!powered) powerIndicator.setText("");
+    if(playerNameHUD){
+      playerNameHUD.textContent = playerName ? `⭐ ${playerName}` : "";
+      playerNameHUD.style.display = playerName ? "block" : "none";
+    }
     updateProgressBar(L);
   }
 
@@ -2845,18 +2935,103 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function playLevelTransition(scene,nextIdx,onMidpoint){
-    if(!transitionGfx||!transitionLabel){onMidpoint?.();return;}
-    const nextL=LEVELS[nextIdx];
-    const label=nextL?`🎈 ${nextIdx+1}/${LEVELS.length}\n${nextL.name.replace(/^Nível \d+ — /,"")}` : "🏆 Missão Concluída!";
-    transitionGfx.clear(); transitionGfx.fillStyle(0x0a0020,1); transitionGfx.fillRect(0,0,960,540);
-    transitionLabel.setText(label);
-    scene.tweens.add({targets:[transitionGfx,transitionLabel],alpha:1,duration:320,ease:"Sine.easeIn",onComplete:()=>{
-      onMidpoint?.();
-      scene.time.delayedCall(520,()=>{
-        scene.tweens.add({targets:[transitionGfx,transitionLabel],alpha:0,duration:380,ease:"Sine.easeOut"});
-      });
-    }});
+  // Frases motivacionais por nível — mostradas na transição de entrada
+  const LEVEL_ENTRY_PHRASES = [
+    "Celebra os teus direitos! 🎈",
+    "Conheces os teus direitos? 📜",
+    "A Convenção protege-te! 🌍",
+    "Brincar é um direito! 🧸",
+    "Aprender abre o mundo! 📚",
+    "A saúde é um tesouro! 💊",
+    "Ninguém te pode magoar! 🛡️",
+    "A tua voz importa! 🗣️",
+    "O futuro começa já! 🌱",
+    "A UNICEF está do teu lado! 🌍",
+    "O teu nome é único! 🪪",
+    "A família é o teu porto! 👨‍👩‍👧",
+    "Todos merecem um lar seguro! ✈️",
+    "Crianças não trabalham — brincam! ⚠️",
+    "Expressa-te livremente! 🗣️",
+    "A tua privacidade é sagrada! 🔒",
+    "Cada cultura é um tesouro! 🌍",
+    "Inclusão é para todos! 🏃",
+    "Cuida do planeta! 🌱",
+    "Os teus direitos existem online! 💻"
+  ];
+
+  function playLevelTransition(scene, nextIdx, onMidpoint){
+    const nextL = LEVELS[nextIdx];
+    if(!nextL){ onMidpoint?.(); return; }
+
+    const ov    = document.getElementById("levelTransitionOverlay");
+    const panel = document.getElementById("levelTransitionPanel");
+    const elNum    = document.getElementById("ltNum");
+    const elTitle  = document.getElementById("ltTitle");
+    const elPhrase = document.getElementById("ltPhrase");
+    const elName   = document.getElementById("ltName");
+    if(!ov){ onMidpoint?.(); return; }
+
+    // Cor do céu do nível seguinte
+    const T      = THEMES[nextL.theme] || THEMES[0];
+    const topHex = T.skyTop;
+    const botHex = T.skyBot;
+    const topR=(topHex>>16)&0xff, topG=(topHex>>8)&0xff, topB=topHex&0xff;
+    const botR=(botHex>>16)&0xff, botG=(botHex>>8)&0xff, botB=botHex&0xff;
+    const midR=Math.round((topR+botR)/2), midG=Math.round((topG+botG)/2), midB=Math.round((topB+botB)/2);
+    const brightness = 0.299*midR + 0.587*midG + 0.114*midB;
+    const isDark = brightness < 110;
+
+    const topCss = `rgb(${topR},${topG},${topB})`;
+    const botCss = `rgb(${botR},${botG},${botB})`;
+    const textCol  = isDark ? "#ffd700" : "#1a0040";
+    const subCol   = isDark ? "#ffe0b0" : "#3a0868";
+    const nameCol  = isDark ? "#fff5e0" : "#200050";
+    const numCol   = isDark ? "rgba(255,215,0,0.80)" : "rgba(40,0,80,0.65)";
+    const borderCol= isDark ? "rgba(255,215,0,0.35)" : "rgba(255,255,255,0.45)";
+
+    // Aplicar estilos dinâmicos
+    ov.style.background    = `linear-gradient(180deg, ${topCss} 0%, ${botCss} 100%)`;
+    panel.style.borderColor = borderCol;
+    panel.style.background  = isDark ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.18)";
+
+    elNum.style.color    = numCol;
+    elNum.textContent    = `Nível ${nextIdx+1} / ${LEVELS.length}`;
+    elTitle.style.color  = textCol;
+    elTitle.textContent  = nextL.name.replace(/^Nível \d+\s*[—–-]\s*/, "");
+    elPhrase.style.color = subCol;
+    elPhrase.textContent = LEVEL_ENTRY_PHRASES[nextIdx] || "Vai em frente! 🎈";
+    elName.style.color   = nameCol;
+    elName.textContent   = playerName ? `✨ Vai, ${playerName}! ✨` : "✨ Vai lá! ✨";
+
+    // Mostrar overlay com fade-in CSS
+    ov.style.opacity   = "0";
+    ov.style.display   = "flex";
+    ov.style.transition= "opacity 0.30s ease";
+    ov.style.cursor    = "pointer";
+    requestAnimationFrame(()=>{ ov.style.opacity = "1"; });
+
+    // Carregar o nível a meio da transição (invisível) — acontece rapidamente
+    const midTimer = setTimeout(()=>{ onMidpoint?.(); }, 350);
+
+    // Função que esconde o painel (partilhada entre timeout e clique)
+    let hidden = false;
+    function hidePanel() {
+      if (hidden) return;
+      hidden = true;
+      ov.style.cursor = "";
+      ov.removeEventListener("click", hidePanel);
+      ov.style.opacity = "0";
+      setTimeout(()=>{ ov.style.display = "none"; }, 320);
+    }
+
+    // Manter visível 3,2 s — tempo suficiente para uma criança ler
+    // Toque/clique em qualquer sítio do painel avança imediatamente
+    const hideTimer = setTimeout(hidePanel, 3200);
+    ov.addEventListener("click", hidePanel);
+
+    // Guardar timers para poder cancelar se necessário
+    ov._midTimer  = midTimer;
+    ov._hideTimer = hideTimer;
   }
 
   function nextLevel(scene){
@@ -2974,6 +3149,52 @@ window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("winPct").textContent=`${quizStats.correct}/${quizStats.total} (${pct}%)`;
       document.getElementById("winMedal").textContent=medal+master;
 
+      // ── Tabela de erros por tema ──────────────────────────────────
+      const THEME_LABELS = {
+        historia:"O Dia da Criança",declaracao:"Declaração de 1959",
+        convencao:"Convenção de 1989",brincar:"Direito ao Brincar",
+        educacao:"Direito à Educação",saude:"Direito à Saúde",
+        protecao:"Direito à Proteção",participacao:"Participação",
+        futuro:"Futuro Sustentável",unicef:"UNICEF",
+        identidade:"Identidade",familia:"Família",
+        refugiados:"Refugiados",trabalho:"Trabalho Infantil",
+        expressao:"Expressão",privacidade:"Privacidade",
+        cultura:"Cultura",deficiencia:"Inclusão",
+        ambiente:"Ambiente",digital:"Mundo Digital"
+      };
+      const winThemeErrors = document.getElementById("winThemeErrors");
+      const winThemeTable  = document.getElementById("winThemeTable");
+      const hasThemeErrors = Object.keys(quizStats.errorsByTheme).length > 0;
+      if(winThemeErrors && winThemeTable) {
+        if(hasThemeErrors){
+          winThemeErrors.style.display = "block";
+          winThemeTable.innerHTML = "";
+          // Cabeçalho
+          const hdr = document.createElement("tr");
+          hdr.innerHTML = `
+            <th style="text-align:left;padding:3px 6px;border-bottom:1px solid rgba(255,215,0,0.3);color:#ffd700;font-size:11px;">Tema</th>
+            <th style="text-align:center;padding:3px 6px;border-bottom:1px solid rgba(255,215,0,0.3);color:#ffd700;font-size:11px;">Erros</th>
+            <th style="text-align:center;padding:3px 6px;border-bottom:1px solid rgba(255,215,0,0.3);color:#ffd700;font-size:11px;width:80px;">Resultado</th>`;
+          winThemeTable.appendChild(hdr);
+          // Ordenar por nº de erros (mais erros primeiro)
+          const sorted = Object.entries(quizStats.errorsByTheme).sort((a,b)=>b[1]-a[1]);
+          sorted.forEach(([theme, count]) => {
+            const tr = document.createElement("tr");
+            const bar = "🟥".repeat(Math.min(count,5)) + (count>5?` +${count-5}`:"");
+            const label = THEME_LABELS[theme] || theme;
+            const bg = count >= 3 ? "rgba(255,80,50,0.10)" : count === 2 ? "rgba(255,160,50,0.08)" : "transparent";
+            tr.innerHTML = `
+              <td style="padding:4px 6px;background:${bg};border-radius:4px 0 0 4px;">${label}</td>
+              <td style="text-align:center;padding:4px 6px;background:${bg};font-weight:700;color:${count>=3?"#ff6050":count===2?"#ffaa40":"#a0ffb0"};">${count}</td>
+              <td style="text-align:left;padding:4px 6px;background:${bg};border-radius:0 4px 4px 0;letter-spacing:1px;">${bar}</td>`;
+            winThemeTable.appendChild(tr);
+          });
+        } else {
+          winThemeErrors.style.display = "none";
+        }
+      }
+
+      // ── Lista detalhada das perguntas erradas ─────────────────────
       const winErrors=document.getElementById("winErrors");
       const winErrorList=document.getElementById("winErrorList");
       if(winErrors&&winErrorList){
@@ -2987,12 +3208,53 @@ window.addEventListener("DOMContentLoaded", () => {
         } else { winErrors.style.display="none"; }
       }
       document.getElementById("winOverlay").classList.remove("hidden");
+
+      // ── Botão Modo Revisão ────────────────────────────────────────
+      const btnReview = document.getElementById("btnReviewMode");
+      if (btnReview) {
+        if (quizStats.errors && quizStats.errors.length > 0) {
+          btnReview.style.display = "block";
+          btnReview.textContent = `📋 Rever ${quizStats.errors.length} pergunta${quizStats.errors.length>1?"s":""} errada${quizStats.errors.length>1?"s":""}`;
+          btnReview.onclick = () => {
+            const reviewList = document.getElementById("reviewList");
+            if (reviewList) {
+              reviewList.innerHTML = "";
+              quizStats.errors.forEach((e, i) => {
+                const pool = QUIZ_BY_THEME[e.theme] || [];
+                const orig = pool.find(q => q.q === e.q);
+                const exp = orig?.exp || "";
+                const art = QUIZ_ARTICLE[e.theme];
+                const div = document.createElement("div");
+                div.className = "review-question";
+                div.innerHTML = `
+                  ${art ? `<div style="margin-bottom:5px;"><span class="quiz-article-badge">📜 ${art}</span></div>` : ""}
+                  <div class="review-question-text">${i+1}. ${e.level} — ${e.q}</div>
+                  <div class="review-wrong">❌ A tua resposta: <strong>${e.wrong}</strong></div>
+                  <div class="review-correct">✅ Resposta certa: <strong>${e.correct}</strong></div>
+                  ${exp ? `<div class="review-explanation">💡 ${exp}</div>` : ""}
+                `;
+                reviewList.appendChild(div);
+              });
+            }
+            document.getElementById("reviewOverlay").classList.remove("hidden");
+          };
+        } else {
+          btnReview.style.display = "none";
+        }
+      }
+      const btnCloseReview = document.getElementById("btnCloseReview");
+      if (btnCloseReview) {
+        btnCloseReview.onclick = () => document.getElementById("reviewOverlay").classList.add("hidden");
+      }
     });
   }
 
   function showQuiz(quiz,done,isRetry){
     quizOverlay.classList.remove("hidden");
-    quizQuestion.textContent=(isRetry?"🔄 Segunda tentativa! ":"")+quiz.q;
+    const _qTheme = LEVELS[currentLevel]?.quizTheme;
+    const _article = QUIZ_ARTICLE[_qTheme];
+    const _badgeHTML = _article ? `<span class="quiz-article-badge">📜 ${_article}</span><br>` : "";
+    quizQuestion.innerHTML = _badgeHTML + (isRetry ? "🔄 Segunda tentativa! " : "") + quiz.q;
     quizAnswers.innerHTML=""; quizFeedback.textContent=""; quizFeedback.style.color="#ff6b35";
     quizExplanation.textContent=""; quizExplanation.classList.add("hidden");
     // Limpar sempre o btnCloseQuiz ao abrir nova pergunta — evita cliques acidentais
@@ -3058,7 +3320,11 @@ window.addEventListener("DOMContentLoaded", () => {
           if(sceneRef&&player){sceneRef.tweens.add({targets:player,angle:{from:-10,to:10},duration:80,yoyo:true,repeat:4,ease:"Sine.easeInOut",onComplete:()=>{if(player)player.setAngle(0);}});}
 
           quizStats.errors=quizStats.errors||[];
-          if(!isRetry) quizStats.errors.push({level:LEVELS[currentLevel]?.name||`Nível ${currentLevel+1}`,q:quiz.q,wrong:ans.t,correct:correct[0].t});
+          if(!isRetry) {
+            const qTheme = LEVELS[currentLevel]?.quizTheme || "historia";
+            quizStats.errors.push({level:LEVELS[currentLevel]?.name||`Nível ${currentLevel+1}`,theme:qTheme,q:quiz.q,wrong:ans.t,correct:correct[0].t});
+            quizStats.errorsByTheme[qTheme] = (quizStats.errorsByTheme[qTheme]||0) + 1;
+          }
           if(quiz.exp){quizExplanation.textContent="💡 "+quiz.exp;quizExplanation.classList.remove("hidden");}
           const tip=QUIZ_TIPS[LEVELS[currentLevel]?.quizTheme]||"";
           quizFeedback.textContent="❌ Quase! A resposta certa era: "+correct[0].t+"\nTenta outra pergunta!";
@@ -3405,8 +3671,20 @@ window.addEventListener("DOMContentLoaded", () => {
   function scheduleBlink(scene){
     const blinkOnce=()=>{
       if(!player) return;
-      player.setTexture("vanberto_blink");
-      scene.time.delayedCall(120,()=>{if(player)applyVanBertoTexture(scene);});
+      if(player.getData("usingPng")){
+        // PNG mode: piscar com fade rápido de alpha (0.85) e scaleY ligeiro
+        const origAlpha = player.alpha;
+        scene.tweens.add({
+          targets: player,
+          scaleY: { from: player.scaleY, to: player.scaleY * 0.85 },
+          alpha:  { from: origAlpha, to: Math.max(0.7, origAlpha - 0.15) },
+          duration: 60, yoyo: true,
+          onComplete: () => { if(player) player.setAlpha(origAlpha); }
+        });
+      } else {
+        player.setTexture("vanberto_blink");
+        scene.time.delayedCall(120,()=>{if(player)applyVanBertoTexture(scene);});
+      }
       scene.time.delayedCall(2200+Math.floor(Math.random()*2600),blinkOnce);
     };
     scene.time.delayedCall(1800,blinkOnce);
@@ -3415,14 +3693,55 @@ window.addEventListener("DOMContentLoaded", () => {
   function applyVanBertoTexture(scene){
     if(!player||!player.body) return;
     if(awaitingQuiz||!startOverlay.classList.contains("hidden")||!historyOverlay.classList.contains("hidden")){
-      if(player.texture.key!=="vanberto_open") player.setTexture("vanberto_open"); return;
+      if(player.getData("usingPng")){
+        // PNG: estado parado — mostrar sem inclinação
+        if(!invuln) { player.setScale(powered ? 1.18 : 1.0); }
+      } else {
+        if(player.texture.key!=="vanberto_open") player.setTexture("vanberto_open");
+      }
+      return;
     }
     const onGround=!!player.body.blocked.down, moving=Math.abs(player.body.velocity.x)>5;
-    if(onGround&&moving){
-      const step=Math.floor(scene.time.now/140)%2;
-      const tex=step===0?"vanberto_walk1":"vanberto_walk2";
-      if(player.texture.key!==tex) player.setTexture(tex);
-    } else { if(player.texture.key!=="vanberto_open") player.setTexture("vanberto_open"); }
+
+    if(player.getData("usingPng")){
+      // PNG mode: animar com squash/stretch e bob vertical
+      const baseScale = powered ? 1.18 : 1.0;
+      const displayW = 72 * baseScale;
+      const displayH = 72 * baseScale;
+      if(onGround && moving){
+        // Bob de andar — passo alternado a cada 140ms com squash/stretch suave
+        const step = Math.floor(scene.time.now / 140) % 4;
+        // 4 fases: 0=neutro, 1=comprime (foot down), 2=neutro, 3=estica (push off)
+        const bobY  = [0, 3, 0, -4][step];
+        const scaleX = [1.0, 1.08, 1.0, 0.93][step];
+        const scaleY = [1.0, 0.92, 1.0, 1.09][step];
+        if(!invuln){
+          player.setDisplaySize(displayW * scaleX, displayH * scaleY);
+        }
+        // Deslocar o sprite ligeiramente para cima/baixo no bob
+        // (usamos a posição Y base + bobY — só visual, não afeta body)
+        player.y += bobY * 0.15; // suave, não o frame inteiro
+      } else if(onGround){
+        // Parado — animar respiração leve
+        const breathe = 0.5 + Math.sin(scene.time.now * 0.002) * 0.5;
+        const scaleXb = 1.0 + breathe * 0.012;
+        const scaleYb = 1.0 - breathe * 0.010;
+        if(!invuln) player.setDisplaySize(displayW * scaleXb, displayH * scaleYb);
+      } else {
+        // No ar — esticar ligeiramente na vertical
+        const vy = player.body.velocity.y;
+        const stretch = vy < 0 ? 1.10 : (vy > 200 ? 0.88 : 1.0);
+        const squeeze = vy < 0 ? 0.90 : (vy > 200 ? 1.12 : 1.0);
+        if(!invuln) player.setDisplaySize(displayW * squeeze, displayH * stretch);
+      }
+    } else {
+      // Canvas mode — comportamento original
+      if(onGround&&moving){
+        const step=Math.floor(scene.time.now/140)%2;
+        const tex=step===0?"vanberto_walk1":"vanberto_walk2";
+        if(player.texture.key!==tex) player.setTexture(tex);
+      } else { if(player.texture.key!=="vanberto_open") player.setTexture("vanberto_open"); }
+    }
   }
 
   // ===== TEXTURAS =====
@@ -3607,162 +3926,266 @@ window.addEventListener("DOMContentLoaded", () => {
     tex.refresh();
   }
 
-  // Vilões — coloridos mas assustadores
+  // Vilões — muito mais detalhados e com personalidade própria
   function makeVilaosTextures(scene){
 
     // helper: olhos malvados com sobrancelhas
     function evilEyes(ctx,cx,cy,eyeColor){
-      // Sobrancelhas malvadas (inclinadas para dentro)
-      ctx.strokeStyle="#000"; ctx.lineWidth=2.5;
-      ctx.beginPath(); ctx.moveTo(cx-12,cy-9); ctx.lineTo(cx-5,cy-5); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(cx+12,cy-9); ctx.lineTo(cx+5,cy-5); ctx.stroke();
-      // Brancos dos olhos
+      // Sobrancelhas malvadas (mais espessas e inclinadas)
+      ctx.strokeStyle="#000"; ctx.lineWidth=3;
+      ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(cx-14,cy-11); ctx.lineTo(cx-4,cy-6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx+14,cy-11); ctx.lineTo(cx+4,cy-6); ctx.stroke();
+      // Brancos dos olhos (com sombra)
+      ctx.shadowColor="rgba(0,0,0,0.4)"; ctx.shadowBlur=3;
       ctx.fillStyle="#fff";
-      ctx.beginPath(); ctx.ellipse(cx-6,cy,5,6,Math.PI*0.1,0,Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(cx+6,cy,5,6,-Math.PI*0.1,0,Math.PI*2); ctx.fill();
-      // Pupilas
+      ctx.beginPath(); ctx.ellipse(cx-7,cy,5.5,6.5,Math.PI*0.08,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx+7,cy,5.5,6.5,-Math.PI*0.08,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+      // Íris colorida
       ctx.fillStyle=eyeColor;
-      ctx.beginPath(); ctx.ellipse(cx-6,cy+1,3,4,0,0,Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(cx+6,cy+1,3,4,0,0,Math.PI*2); ctx.fill();
-      // Brilho pupila
-      ctx.fillStyle="rgba(255,255,255,0.6)";
-      ctx.beginPath(); ctx.arc(cx-7,cy-1,1.2,0,Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(cx+5,cy-1,1.2,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx-7,cy+1,3.5,4.5,0,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx+7,cy+1,3.5,4.5,0,0,Math.PI*2); ctx.fill();
+      // Pupila preta
+      ctx.fillStyle="#000";
+      ctx.beginPath(); ctx.ellipse(cx-7,cy+2,1.8,2.4,0,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(cx+7,cy+2,1.8,2.4,0,0,Math.PI*2); ctx.fill();
+      // Brilho duplo na pupila (mais realista)
+      ctx.fillStyle="rgba(255,255,255,0.75)";
+      ctx.beginPath(); ctx.arc(cx-8,cy-0.5,1.4,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+6,cy-0.5,1.4,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,0.45)";
+      ctx.beginPath(); ctx.arc(cx-6,cy+2,0.8,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+8,cy+2,0.8,0,Math.PI*2); ctx.fill();
     }
 
-    // helper: boca malvada com dentes
-    function evilMouth(ctx,cx,cy,color){
+    // helper: boca malvada com dentes e babas
+    function evilMouth(ctx,cx,cy,color, drool=false){
+      // Boca aberta (meia-lua)
       ctx.fillStyle="#1a0000";
-      ctx.beginPath(); ctx.arc(cx,cy,9,0,Math.PI); ctx.fill();
-      // Dentes
-      ctx.fillStyle="#ffffff";
-      for(let d=0;d<4;d++) ctx.fillRect(cx-8+d*4,cy,3,5);
+      ctx.beginPath(); ctx.arc(cx,cy,10,0,Math.PI); ctx.fill();
+      // Língua
+      ctx.fillStyle="#cc2244";
+      ctx.beginPath(); ctx.ellipse(cx, cy+5, 4, 3, 0, 0, Math.PI*2); ctx.fill();
+      // Dentes (4 dentes irregulares)
+      ctx.fillStyle="#ffffee";
+      ctx.fillRect(cx-9, cy, 4, 6);
+      ctx.fillRect(cx-4, cy, 4, 7);
+      ctx.fillRect(cx+1, cy, 4, 6);
+      ctx.fillRect(cx+6, cy, 4, 5);
+      // Contorno da boca
       ctx.strokeStyle=color; ctx.lineWidth=1.5;
-      ctx.beginPath(); ctx.arc(cx,cy,9,0,Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx,cy,10,0,Math.PI); ctx.stroke();
+      // Babas (detalhe de vilão perigoso)
+      if(drool){
+        ctx.fillStyle="rgba(200,255,200,0.7)";
+        ctx.beginPath(); ctx.moveTo(cx-3,cy+8); ctx.quadraticCurveTo(cx-3,cy+14,cx-2,cy+18); ctx.quadraticCurveTo(cx+0,cy+16,cx+1,cy+8); ctx.fill();
+      }
     }
 
-    // ── Vilão Redondo (lilás) ─────────────────────────────────────
+    // ── Vilão Redondo — bola vermelha mais elaborada ──────────────
     if(!scene.textures.exists("vilao_round")){
       const tex=scene.textures.createCanvas("vilao_round",64,64), ctx=tex.getContext();
       const cx=32,cy=32;
-      // Halo branco exterior para visibilidade em qualquer fundo
-      ctx.strokeStyle="rgba(255,255,255,0.88)"; ctx.lineWidth=4;
-      ctx.beginPath(); ctx.arc(cx,cy,24,0,Math.PI*2); ctx.stroke();
+
+      // Sombra no chão
+      ctx.fillStyle="rgba(0,0,0,0.22)";
+      ctx.beginPath(); ctx.ellipse(cx,cy+26,20,5,0,0,Math.PI*2); ctx.fill();
+
+      // Halo externo para contraste em qualquer fundo
+      ctx.shadowColor="rgba(200,0,0,0.60)"; ctx.shadowBlur=10;
+      ctx.strokeStyle="rgba(255,255,255,0.90)"; ctx.lineWidth=4.5;
+      ctx.beginPath(); ctx.arc(cx,cy,23,0,Math.PI*2); ctx.stroke();
+      ctx.shadowBlur=0;
       ctx.strokeStyle="rgba(0,0,0,0.30)"; ctx.lineWidth=2;
-      ctx.beginPath(); ctx.arc(cx,cy,26,0,Math.PI*2); ctx.stroke();
-      // Aura vermelha
-      ctx.fillStyle="rgba(255,40,0,0.16)"; ctx.beginPath(); ctx.arc(cx,cy,30,0,Math.PI*2); ctx.fill();
-      // Corpo vermelho brilhante
-      const gr=ctx.createRadialGradient(cx-7,cy-7,3,cx,cy,22);
-      gr.addColorStop(0,"#ff9090"); gr.addColorStop(0.45,"#ee1111"); gr.addColorStop(1,"#8a0000");
+      ctx.beginPath(); ctx.arc(cx,cy,25,0,Math.PI*2); ctx.stroke();
+
+      // Corpo — gradiente esférico rico
+      const gr=ctx.createRadialGradient(cx-8,cy-8,2,cx,cy,22);
+      gr.addColorStop(0,"#ff7070");
+      gr.addColorStop(0.25,"#ee1111");
+      gr.addColorStop(0.65,"#bb0000");
+      gr.addColorStop(1,"#6a0000");
       ctx.beginPath(); ctx.arc(cx,cy,22,0,Math.PI*2); ctx.fillStyle=gr; ctx.fill();
-      // Pintas brancas (aspeto de bola perigosa)
-      [[cx-8,cy-8,4],[cx+7,cy-5,3],[cx-4,cy+8,3.5],[cx+9,cy+7,2.5]].forEach(([px,py,pr])=>{
-        ctx.fillStyle="rgba(255,255,255,0.30)";
+
+      // Padrão de pintas (marcas de perigo — como cogumelo venenoso)
+      const spots = [[cx-8,cy-8,4.5],[cx+8,cy-5,3.5],[cx-5,cy+8,4],[cx+10,cy+7,3],[cx+1,cy-13,3]];
+      spots.forEach(([px,py,pr])=>{
+        ctx.fillStyle="rgba(255,255,255,0.22)";
         ctx.beginPath(); ctx.arc(px,py,pr,0,Math.PI*2); ctx.fill();
+        // Borda branca da pinta
+        ctx.strokeStyle="rgba(255,255,255,0.15)"; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.arc(px,py,pr,0,Math.PI*2); ctx.stroke();
       });
-      // Brilho
-      ctx.fillStyle="rgba(255,200,200,0.30)";
-      ctx.beginPath(); ctx.ellipse(cx-7,cy-8,9,13,Math.PI*0.3,0,Math.PI*2); ctx.fill();
-      // Contorno
+
+      // Brilho esférico (canto sup. esq.)
+      ctx.fillStyle="rgba(255,200,200,0.40)";
+      ctx.beginPath(); ctx.ellipse(cx-8,cy-9,10,14,Math.PI*0.3,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,0.25)";
+      ctx.beginPath(); ctx.ellipse(cx-10,cy-12,5,7,Math.PI*0.3,0,Math.PI*2); ctx.fill();
+
+      // Contorno final
       ctx.strokeStyle="#6a0000"; ctx.lineWidth=2.5;
       ctx.beginPath(); ctx.arc(cx,cy,22,0,Math.PI*2); ctx.stroke();
-      // Cara mauzona
-      evilEyes(ctx,cx,cy-2,"#ff0000");
-      evilMouth(ctx,cx,cy+9,"#8a0000");
+
+      // Cara malvada
+      evilEyes(ctx,cx,cy-3,"#ff0000");
+      evilMouth(ctx,cx,cy+10,"#8a0000", false);
       tex.refresh();
     }
 
-    // ── Vilão Espinhoso (azul escuro perigoso) ───────────────────────
+    // ── Vilão Espinhoso — azul muito mais detalhado ────────────────
     if(!scene.textures.exists("vilao_spike")){
       const tex=scene.textures.createCanvas("vilao_spike",64,64), ctx=tex.getContext();
       const cx=32,cy=34;
-      // Aura azul
-      ctx.fillStyle="rgba(0,60,200,0.16)"; ctx.beginPath(); ctx.arc(cx,cy,30,0,Math.PI*2); ctx.fill();
-      // Halo branco exterior para visibilidade
-      ctx.strokeStyle="rgba(255,255,255,0.85)"; ctx.lineWidth=4;
+
+      // Sombra
+      ctx.fillStyle="rgba(0,0,0,0.20)";
+      ctx.beginPath(); ctx.ellipse(cx,cy+22,18,5,0,0,Math.PI*2); ctx.fill();
+
+      // Halo azul exterior
+      ctx.shadowColor="rgba(0,80,220,0.55)"; ctx.shadowBlur=10;
+      ctx.strokeStyle="rgba(255,255,255,0.88)"; ctx.lineWidth=4.5;
       ctx.beginPath(); ctx.arc(cx,cy,23,0,Math.PI*2); ctx.stroke();
-      ctx.strokeStyle="rgba(0,0,0,0.25)"; ctx.lineWidth=2;
+      ctx.shadowBlur=0;
+      ctx.strokeStyle="rgba(0,0,0,0.28)"; ctx.lineWidth=2;
       ctx.beginPath(); ctx.arc(cx,cy,25,0,Math.PI*2); ctx.stroke();
-      // Corpo azul escuro
-      const gr=ctx.createRadialGradient(cx-5,cy-5,2,cx,cy,21);
-      gr.addColorStop(0,"#80b0ff"); gr.addColorStop(0.5,"#1840d0"); gr.addColorStop(1,"#0a1060");
-      ctx.beginPath(); ctx.arc(cx,cy,21,0,Math.PI*2); ctx.fillStyle=gr; ctx.fill();
-      // Espinhos azul-elétrico
-      for(let i=0;i<7;i++){
-        const a=Math.PI*2*i/7-Math.PI/7;
-        ctx.save(); ctx.translate(cx+Math.cos(a)*21,cy+Math.sin(a)*21); ctx.rotate(a+Math.PI/2);
-        const grs=ctx.createLinearGradient(0,0,0,18);
-        grs.addColorStop(0,"#80c8ff"); grs.addColorStop(1,"#0020c0");
-        ctx.fillStyle=grs;
-        ctx.beginPath(); ctx.moveTo(-5,0); ctx.lineTo(5,0); ctx.lineTo(0,-18); ctx.closePath(); ctx.fill();
-        ctx.strokeStyle="#001080"; ctx.lineWidth=1; ctx.stroke();
-        ctx.restore();
+
+      // Aura azul elétrica
+      ctx.fillStyle="rgba(50,100,255,0.18)";
+      ctx.beginPath(); ctx.arc(cx,cy,28,0,Math.PI*2); ctx.fill();
+
+      // Espinhos (8 ao redor) — antes do corpo para ficarem por baixo
+      ctx.fillStyle="#003090";
+      ctx.shadowColor="rgba(0,60,180,0.50)"; ctx.shadowBlur=4;
+      for(let si=0;si<8;si++){
+        const sa=Math.PI*2*si/8 - Math.PI*0.08;
+        const sx1=cx+Math.cos(sa)*20, sy1=cy+Math.sin(sa)*20;
+        const sx2=cx+Math.cos(sa)*30, sy2=cy+Math.sin(sa)*30;
+        const sxL=cx+Math.cos(sa+0.25)*21, syL=cy+Math.sin(sa+0.25)*21;
+        const sxR=cx+Math.cos(sa-0.25)*21, syR=cy+Math.sin(sa-0.25)*21;
+        ctx.beginPath(); ctx.moveTo(sx2,sy2); ctx.lineTo(sxL,syL); ctx.lineTo(sxR,syR); ctx.closePath(); ctx.fill();
       }
-      // Brilho
-      ctx.fillStyle="rgba(160,200,255,0.25)";
-      ctx.beginPath(); ctx.ellipse(cx-7,cy-7,9,12,Math.PI*0.3,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+
+      // Corpo principal — gradiente azul elétrico
+      const gr=ctx.createRadialGradient(cx-7,cy-7,2,cx,cy,21);
+      gr.addColorStop(0,"#80b0ff");
+      gr.addColorStop(0.30,"#2255ee");
+      gr.addColorStop(0.70,"#0030cc");
+      gr.addColorStop(1,"#001080");
+      ctx.beginPath(); ctx.arc(cx,cy,21,0,Math.PI*2); ctx.fillStyle=gr; ctx.fill();
+
+      // Padrão de circuitos (linhas azuis brilhantes)
+      ctx.strokeStyle="rgba(150,200,255,0.35)"; ctx.lineWidth=1;
+      ctx.lineCap="round";
+      [[cx-6,cy-10,cx-6,cy-3],[cx-6,cy-3,cx+4,cy-3],[cx+4,cy-3,cx+4,cy+5],
+       [cx-12,cy+4,cx-4,cy+4],[cx+6,cy+8,cx+12,cy+2]].forEach(([x1,y1,x2,y2])=>{
+        ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+      });
+      // Nódulos dos circuitos
+      ctx.fillStyle="rgba(180,220,255,0.55)";
+      [[cx-6,cy-3],[cx+4,cy+5],[cx-4,cy+4]].forEach(([nx,ny])=>{
+        ctx.beginPath(); ctx.arc(nx,ny,2,0,Math.PI*2); ctx.fill();
+      });
+
+      // Brilho esférico
+      ctx.fillStyle="rgba(160,200,255,0.38)";
+      ctx.beginPath(); ctx.ellipse(cx-7,cy-8,9,13,Math.PI*0.3,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,0.22)";
+      ctx.beginPath(); ctx.ellipse(cx-9,cy-11,5,7,Math.PI*0.3,0,Math.PI*2); ctx.fill();
+
       // Contorno
-      ctx.strokeStyle="#000840"; ctx.lineWidth=2.5;
+      ctx.strokeStyle="#001580"; ctx.lineWidth=2.5;
       ctx.beginPath(); ctx.arc(cx,cy,21,0,Math.PI*2); ctx.stroke();
-      // Cara
-      evilEyes(ctx,cx,cy-3,"#0040ff");
-      evilMouth(ctx,cx,cy+8,"#001080");
+
+      evilEyes(ctx,cx,cy-2,"#0044ff");
+      evilMouth(ctx,cx,cy+10,"#001080", false);
       tex.refresh();
     }
 
-    // ── Vilão Bug (verde ácido) ───────────────────────────────────
+    // ── Vilão Inseto — verde muito mais elaborado ──────────────────
     if(!scene.textures.exists("vilao_bug")){
       const tex=scene.textures.createCanvas("vilao_bug",64,64), ctx=tex.getContext();
-      const cx=32,cy=32;
-      // Aura
-      ctx.fillStyle="rgba(0,180,0,0.12)"; ctx.beginPath(); ctx.arc(cx,cy,30,0,Math.PI*2); ctx.fill();
-      // Halo branco exterior para visibilidade
-      ctx.strokeStyle="rgba(255,255,255,0.82)"; ctx.lineWidth=4;
+      const cx=32,cy=30;
+
+      // Sombra
+      ctx.fillStyle="rgba(0,0,0,0.22)";
+      ctx.beginPath(); ctx.ellipse(cx,cy+28,22,6,0,0,Math.PI*2); ctx.fill();
+
+      // Halo verde exterior
+      ctx.shadowColor="rgba(0,160,0,0.55)"; ctx.shadowBlur=10;
+      ctx.strokeStyle="rgba(255,255,255,0.82)"; ctx.lineWidth=4.5;
       ctx.beginPath(); ctx.arc(cx,cy,23,0,Math.PI*2); ctx.stroke();
+      ctx.shadowBlur=0;
       ctx.strokeStyle="rgba(0,0,0,0.22)"; ctx.lineWidth=2;
       ctx.beginPath(); ctx.arc(cx,cy,25,0,Math.PI*2); ctx.stroke();
-      // Corpo
-      const gr=ctx.createRadialGradient(cx-5,cy-5,3,cx,cy,21);
-      gr.addColorStop(0,"#90ff50"); gr.addColorStop(0.5,"#30b020"); gr.addColorStop(1,"#0a5000");
+
+      // Corpo principal — gradiente verde rico
+      const gr=ctx.createRadialGradient(cx-6,cy-6,2,cx,cy,21);
+      gr.addColorStop(0,"#90ff50");
+      gr.addColorStop(0.35,"#30b020");
+      gr.addColorStop(0.70,"#0d7010");
+      gr.addColorStop(1,"#044806");
       ctx.beginPath(); ctx.arc(cx,cy,21,0,Math.PI*2); ctx.fillStyle=gr; ctx.fill();
-      // Patas laterais (3 de cada lado)
-      ctx.strokeStyle="#1a6010"; ctx.lineWidth=2.5;
-      [[-1,0],[0,0],[1,0]].forEach(([_,__],pi)=>{
-        const py=cy-6+pi*7;
-        ctx.beginPath(); ctx.moveTo(cx-21,py); ctx.quadraticCurveTo(cx-28,py-4,cx-33,py+3); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(cx+21,py); ctx.quadraticCurveTo(cx+28,py-4,cx+33,py+3); ctx.stroke();
-        // Garras
-        ctx.fillStyle="#0a5000";
-        ctx.beginPath(); ctx.arc(cx-33,py+3,3,0,Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(cx+33,py+3,3,0,Math.PI*2); ctx.fill();
-      });
-      // Antenas curvas
-      ctx.strokeStyle="#0a5000"; ctx.lineWidth=2.5;
-      ctx.beginPath(); ctx.moveTo(cx-6,cy-19); ctx.quadraticCurveTo(cx-16,cy-34,cx-10,cy-42); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(cx+6,cy-19); ctx.quadraticCurveTo(cx+16,cy-34,cx+10,cy-42); ctx.stroke();
-      // Pontas antenas
-      ctx.fillStyle="#ff6b35";
-      ctx.beginPath(); ctx.arc(cx-10,cy-42,5,0,Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(cx+10,cy-42,5,0,Math.PI*2); ctx.fill();
-      ctx.strokeStyle="#c04000"; ctx.lineWidth=1; ctx.stroke();
-      // Brilho corpo
-      ctx.fillStyle="rgba(200,255,150,0.22)";
-      ctx.beginPath(); ctx.ellipse(cx-7,cy-7,9,12,Math.PI*0.3,0,Math.PI*2); ctx.fill();
-      // Segmento ventral
-      ctx.strokeStyle="rgba(0,60,0,0.4)"; ctx.lineWidth=1.5;
-      for(let s=0;s<3;s++){
-        ctx.beginPath(); ctx.ellipse(cx,cy-4+s*8,15,3,0,0,Math.PI); ctx.stroke();
+
+      // Patas (3 de cada lado, com articulações)
+      ctx.strokeStyle="#1a6010"; ctx.lineWidth=2.5; ctx.lineCap="round";
+      for(let pi=0;pi<3;pi++){
+        const py=cy-5+pi*7;
+        // Pata esquerda — 2 segmentos com joelho
+        ctx.beginPath(); ctx.moveTo(cx-21,py); ctx.lineTo(cx-28,py-5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx-28,py-5); ctx.lineTo(cx-35,py+4); ctx.stroke();
+        // Garra esquerda
+        ctx.fillStyle="#064806"; ctx.beginPath(); ctx.arc(cx-35,py+4,3.5,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle="#1a6010"; ctx.lineWidth=1; ctx.stroke();
+        // Pata direita
+        ctx.strokeStyle="#1a6010"; ctx.lineWidth=2.5;
+        ctx.beginPath(); ctx.moveTo(cx+21,py); ctx.lineTo(cx+28,py-5); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx+28,py-5); ctx.lineTo(cx+35,py+4); ctx.stroke();
+        ctx.fillStyle="#064806"; ctx.beginPath(); ctx.arc(cx+35,py+4,3.5,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle="#1a6010"; ctx.lineWidth=1; ctx.stroke();
       }
-      // Contorno
-      ctx.strokeStyle="#064a00"; ctx.lineWidth=2.5;
+
+      // Antenas curvas com bola brilhante
+      ctx.strokeStyle="#064806"; ctx.lineWidth=2.5; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(cx-7,cy-20); ctx.quadraticCurveTo(cx-18,cy-36,cx-11,cy-45); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx+7,cy-20); ctx.quadraticCurveTo(cx+18,cy-36,cx+11,cy-45); ctx.stroke();
+      // Bolas das antenas com brilho
+      ctx.shadowColor="rgba(255,100,50,0.70)"; ctx.shadowBlur=6;
+      ctx.fillStyle="#ff5520";
+      ctx.beginPath(); ctx.arc(cx-11,cy-45,5.5,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+11,cy-45,5.5,0,Math.PI*2); ctx.fill();
+      ctx.shadowBlur=0;
+      ctx.strokeStyle="#c04000"; ctx.lineWidth=1.2;
+      ctx.beginPath(); ctx.arc(cx-11,cy-45,5.5,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx+11,cy-45,5.5,0,Math.PI*2); ctx.stroke();
+      // Brilho nas bolas
+      ctx.fillStyle="rgba(255,220,180,0.65)";
+      ctx.beginPath(); ctx.arc(cx-13,cy-47,2,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+9,cy-47,2,0,Math.PI*2); ctx.fill();
+
+      // Segmentos do abdómen (3 anéis)
+      ctx.strokeStyle="rgba(0,80,0,0.45)"; ctx.lineWidth=1.5;
+      for(let s=0;s<3;s++){
+        ctx.beginPath(); ctx.ellipse(cx,cy-3+s*9,16,3,0,0,Math.PI); ctx.stroke();
+      }
+
+      // Brilho esférico
+      ctx.fillStyle="rgba(200,255,150,0.28)";
+      ctx.beginPath(); ctx.ellipse(cx-7,cy-8,9,13,Math.PI*0.3,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,0.20)";
+      ctx.beginPath(); ctx.ellipse(cx-9,cy-11,5,7,Math.PI*0.3,0,Math.PI*2); ctx.fill();
+
+      // Contorno final
+      ctx.strokeStyle="#044806"; ctx.lineWidth=2.5;
       ctx.beginPath(); ctx.arc(cx,cy,21,0,Math.PI*2); ctx.stroke();
-      // Cara
-      evilEyes(ctx,cx,cy-2,"#005000");
-      evilMouth(ctx,cx,cy+9,"#0a5000");
+
+      evilEyes(ctx,cx,cy-2,"#00aa00");
+      evilMouth(ctx,cx,cy+10,"#0a5000", true); // babas no inseto — mais assustador!
       tex.refresh();
     }
-  }
+  } // fim makeVilaosTextures
 
   function makeSparkTexture(scene){
     if(scene.textures.exists("spark_item")) return;
@@ -3852,13 +4275,86 @@ window.addEventListener("DOMContentLoaded", () => {
       ctx.quadraticCurveTo(18,38,16,44); ctx.stroke();
       tex.refresh();
     });
-    // Chupa-chupa 🍭 — item fixo nas plataformas
+    // Chupa-chupa 🍭 — desenhado em Canvas (consistente com todos os outros itens)
     if(!scene.textures.exists("item_chupachupa")){
-      const tex=scene.textures.createCanvas("item_chupachupa",48,48), ctx=tex.getContext();
-      ctx.font="40px serif";
-      ctx.textAlign="center";
-      ctx.textBaseline="middle";
-      ctx.fillText("🍭", 24, 26);
+      const tex=scene.textures.createCanvas("item_chupachupa",52,56), ctx=tex.getContext();
+      const cx=26, cy=20;
+
+      // Halo exterior colorido (brilho de candy)
+      const haloGr = ctx.createRadialGradient(cx,cy,12,cx,cy,22);
+      haloGr.addColorStop(0,"rgba(255,100,200,0)");
+      haloGr.addColorStop(0.6,"rgba(255,80,180,0.22)");
+      haloGr.addColorStop(1,"rgba(255,200,80,0.0)");
+      ctx.fillStyle=haloGr;
+      ctx.beginPath(); ctx.arc(cx,cy,22,0,Math.PI*2); ctx.fill();
+
+      // Cabo — listrado como bastão de Natal (vermelho e branco alternados)
+      for(let ri=0; ri<5; ri++){
+        ctx.fillStyle = ri%2===0 ? "#ff1a44" : "#fff5f8";
+        ctx.beginPath();
+        ctx.roundRect(cx-4, cy+12+ri*5, 8, 6, ri===0?[3,3,0,0]:ri===4?[0,0,3,3]:[0]);
+        ctx.fill();
+      }
+      // Brilho no cabo (lateral esquerda)
+      ctx.fillStyle="rgba(255,255,255,0.45)";
+      ctx.fillRect(cx-3, cy+13, 2, 22);
+      // Contorno do cabo
+      ctx.strokeStyle="#cc0030"; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.roundRect(cx-4,cy+12,8,28,3); ctx.stroke();
+
+      // Sombra suave por baixo do berlinde
+      ctx.fillStyle="rgba(180,0,80,0.20)";
+      ctx.beginPath(); ctx.ellipse(cx+3,cy+5,15,5,0,0,Math.PI*2); ctx.fill();
+
+      // Berlinde — 6 fatias arco-íris bem saturadas
+      const sliceColors=[
+        "#ff1a44",  // vermelho vivo
+        "#ff8c00",  // laranja
+        "#ffe600",  // amarelo
+        "#00cc44",  // verde
+        "#0088ff",  // azul
+        "#cc00ff",  // violeta
+      ];
+      ctx.save(); ctx.translate(cx,cy);
+      // Clip ao círculo para as fatias não saírem
+      ctx.beginPath(); ctx.arc(0,0,17,0,Math.PI*2); ctx.clip();
+      for(let si=0;si<6;si++){
+        ctx.fillStyle=sliceColors[si];
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.arc(0,0,17, si*Math.PI/3 - Math.PI*0.015, (si+1)*Math.PI/3 + Math.PI*0.015);
+        ctx.closePath(); ctx.fill();
+      }
+      // Espiral branca por cima das fatias (dá o aspeto de twist clássico)
+      ctx.strokeStyle="rgba(255,255,255,0.70)";
+      ctx.lineWidth=3.5;
+      ctx.lineCap="round";
+      ctx.beginPath();
+      for(let t=0; t<=Math.PI*1.7; t+=0.06){
+        const r = t / (Math.PI*1.7) * 15;
+        const x2 = Math.cos(t) * r;
+        const y2 = Math.sin(t) * r;
+        t===0 ? ctx.moveTo(x2,y2) : ctx.lineTo(x2,y2);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // Contorno do berlinde — grosso e escuro para destacar
+      ctx.shadowColor="rgba(180,0,80,0.55)"; ctx.shadowBlur=8;
+      ctx.strokeStyle="#990022"; ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.arc(cx,cy,17,0,Math.PI*2); ctx.stroke();
+      ctx.shadowBlur=0;
+
+      // Brilho principal (oval branco grande no canto sup. esq.)
+      ctx.fillStyle="rgba(255,255,255,0.62)";
+      ctx.beginPath(); ctx.ellipse(cx-6,cy-7,7,9,Math.PI*0.35,0,Math.PI*2); ctx.fill();
+      // Brilho secundário mais pequeno
+      ctx.fillStyle="rgba(255,255,255,0.38)";
+      ctx.beginPath(); ctx.ellipse(cx-4,cy-12,3.5,4.5,Math.PI*0.3,0,Math.PI*2); ctx.fill();
+      // Ponto de luz vivo no centro do brilho
+      ctx.fillStyle="rgba(255,255,255,0.85)";
+      ctx.beginPath(); ctx.arc(cx-8,cy-9,2.5,0,Math.PI*2); ctx.fill();
+
       tex.refresh();
     }
     // Brinquedo — ursinho de peluche 🧸 completo (com pernas)
@@ -4721,7 +5217,7 @@ window.addEventListener("DOMContentLoaded", () => {
   function drawStars(themeIdx, worldW){
     if(!starGraphics) return;
     starGraphics.clear();
-    if(themeIdx < 4 || themeIdx >= 10) return; // só em temas escuros/noturnos
+    if(!NIGHT_THEMES.has(themeIdx)) return; // só em temas escuros/noturnos
     // Gerar seed consistente por worldW
     if(starSeed.length===0||starSeed._w!==worldW){
       starSeed=[]; starSeed._w=worldW;
@@ -4742,7 +5238,7 @@ window.addEventListener("DOMContentLoaded", () => {
   function drawMoon(themeIdx){
     if(!moonGraphics) return;
     moonGraphics.clear();
-    if(themeIdx < 4 || themeIdx >= 10) return;
+    if(!NIGHT_THEMES.has(themeIdx)) return;
     const mx=820, my=70, mr=30;
     // Halo duplo suave
     moonGraphics.fillStyle(0xfffbe0,0.07); moonGraphics.fillCircle(mx,my,mr+26);
@@ -4773,19 +5269,28 @@ window.addEventListener("DOMContentLoaded", () => {
   function drawFarLayer(themeIdx, worldW){
     if(!farGraphics) return;
     farGraphics.clear();
-    // Paletas de cor dos edifícios por tema
+    // Paletas de cor dos edifícios por tema (20 — uma por nível)
     const BUILD_PALETTES = [
-      { walls:[0x1a3060,0x0a2050,0x162848,0x0e1e3a], wins:[0xffd700,0x80d0ff,0xffe880,0xff8040] }, // tema0 azul
-      { walls:[0x5a2800,0x3a1800,0x6a3010,0x2e1200], wins:[0xffd700,0xffe880,0xff8040,0xffc060] }, // tema1 dourado
-      { walls:[0x005040,0x003830,0x006858,0x002e28], wins:[0x80ffe0,0x40d4b8,0xffd700,0xb0fff0] }, // tema2 aqua
-      { walls:[0x5a1030,0x3e0820,0x6e1840,0x2e0818], wins:[0xff80c0,0xffd700,0xffb0d0,0xff6090] }, // tema3 rosa
-      { walls:[0x1a0840,0x0a1a40,0x200830,0x0a2040], wins:[0xffd700,0xffe880,0x80d0ff,0xff8040] }, // tema4 lilás
-      { walls:[0x103820,0x082810,0x185030,0x062010], wins:[0xa0ffb0,0x40c060,0xffd700,0x80ff90] }, // tema5 verde
-      { walls:[0x5a1800,0x401000,0x682000,0x300c00], wins:[0xffa060,0xffd700,0xff8040,0xffb880] }, // tema6 laranja
-      { walls:[0x083060,0x042048,0x0c3870,0x021838], wins:[0x80d0ff,0x2898e0,0xffd700,0xb0e8ff] }, // tema7 azul vivo
-      { walls:[0x500828,0x380518,0x601030,0x280410], wins:[0xffa0c8,0xffd700,0xff80c0,0xffc8de] }, // tema8 magenta
-      { walls:[0x104020,0x082e10,0x185028,0x061c08], wins:[0xb0ff80,0x30a050,0xffd700,0xd0ffb0] }, // tema9 verde lima
-      { walls:[0x7a3a00,0x5a2a00,0x8a4a10,0x3e1c00], wins:[0xffd700,0xfff0a0,0xff9040,0xffe880] }, // tema10 final dourado
+      { walls:[0x1a3060,0x0a2050,0x162848,0x0e1e3a], wins:[0xffd700,0x80d0ff,0xffe880,0xff8040] }, //  0 azul rico
+      { walls:[0x5a2800,0x3a1800,0x6a3010,0x2e1200], wins:[0xffd700,0xffe880,0xff8040,0xffc060] }, //  1 crepúsculo
+      { walls:[0x005040,0x003830,0x006858,0x002e28], wins:[0x80ffe0,0x40d4b8,0xffd700,0xb0fff0] }, //  2 aqua
+      { walls:[0x5a1030,0x3e0820,0x6e1840,0x2e0818], wins:[0xff80c0,0xffd700,0xffb0d0,0xff6090] }, //  3 rosa
+      { walls:[0x1a0840,0x0a1a40,0x200830,0x0a2040], wins:[0xffd700,0xffe880,0x80d0ff,0xff8040] }, //  4 lilás noturno
+      { walls:[0x103820,0x082810,0x185030,0x062010], wins:[0xa0ffb0,0x40c060,0xffd700,0x80ff90] }, //  5 turquesa
+      { walls:[0x5a1800,0x401000,0x682000,0x300c00], wins:[0xffa060,0xffd700,0xff8040,0xffb880] }, //  6 laranja
+      { walls:[0x083060,0x042048,0x0c3870,0x021838], wins:[0x80d0ff,0x2898e0,0xffd700,0xb0e8ff] }, //  7 azul noturno
+      { walls:[0x500828,0x380518,0x601030,0x280410], wins:[0xffa0c8,0xffd700,0xff80c0,0xffc8de] }, //  8 magenta
+      { walls:[0x104020,0x082e10,0x185028,0x061c08], wins:[0xb0ff80,0x30a050,0xffd700,0xd0ffb0] }, //  9 floresta
+      { walls:[0x1e4000,0x103000,0x286000,0x0a2800], wins:[0xc0ff40,0x80e000,0xffd700,0xa0f030] }, // 10 verde lima
+      { walls:[0x7a3a00,0x5a2a00,0x8a4a10,0x3e1c00], wins:[0xffd700,0xfff0a0,0xff9040,0xffe880] }, // 11 âmbar
+      { walls:[0x002050,0x001030,0x003070,0x001828], wins:[0x60d0ff,0x2080e0,0xffd700,0xa0e0ff] }, // 12 oceano
+      { walls:[0x3a0060,0x280040,0x500080,0x180030], wins:[0xe080ff,0xffd700,0xc040ff,0xf0b0ff] }, // 13 violeta
+      { walls:[0x003830,0x002820,0x005040,0x001e18], wins:[0x40ffe0,0x00d0b0,0xffd700,0x80fff0] }, // 14 teal
+      { walls:[0x600010,0x440008,0x780018,0x300008], wins:[0xff8080,0xffd700,0xff4040,0xffb0b0] }, // 15 escarlate
+      { walls:[0x003060,0x002048,0x004080,0x001838], wins:[0x80d8ff,0x2898e0,0xffd700,0xb0e8ff] }, // 16 azul céu
+      { walls:[0x1a0838,0x0e0428,0x260c50,0x080218], wins:[0xd080ff,0xffd700,0xa040e0,0xf0c0ff] }, // 17 índigo
+      { walls:[0x003818,0x002410,0x005228,0x001808], wins:[0x60ff90,0x20d060,0xffd700,0xa0ffb0] }, // 18 verde floresta
+      { walls:[0x7a3a00,0x5a2a00,0x8a4a10,0x3e1c00], wins:[0xffd700,0xfff0a0,0xff9040,0xffe880] }, // 19 final dourado
     ];
     const palette = BUILD_PALETTES[themeIdx % BUILD_PALETTES.length];
     const buildColors = palette.walls;
@@ -4973,9 +5478,21 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Temas "noturnos" — céu escuro (lua + estrelas + aurora boreal)
+  // tema 4  → Nível  5 (lilás noturno)
+  // tema 6  → Nível  7 (azul noturno profundo)
+  // tema 7  → Nível  8 (magenta)
+  // tema 11 → Nível 12 (azul oceano)
+  // tema 12 → Nível 13 (violeta mágico)
+  // tema 13 → Nível 14 (teal escuro)
+  // tema 16 → Nível 17 (índigo cósmico)
+  // tema 17 → Nível 18 (verde floresta)
+  // tema 18 → Nível 19 (vermelho escarlate)
+  const NIGHT_THEMES = new Set([4, 6, 7, 11, 12, 13, 16, 17, 18]);
+
   function applyBackground(scene,themeIdx,worldW,hazardDefs=[]){
     const T=THEMES[themeIdx]||THEMES[0];
-    const isNight = themeIdx >= 4 && themeIdx < 10;
+    const isNight = NIGHT_THEMES.has(themeIdx);
 
     // ── CÉU com gradiente triplo mais rico ────────────────────────
     bgGraphics.clear();
@@ -5005,14 +5522,18 @@ window.addEventListener("DOMContentLoaded", () => {
     } else {
       // ── AURORA BOREAL — temas noturnos ───────────────────────────
       const auroraColors = [
-        [0x00ff80, 0x0080ff],  // verde-azul (tema 4 lilás)
-        [0x00ffcc, 0x8000ff],  // ciano-violeta (tema 5 verde)
-        [0xff8000, 0xff0080],  // laranja-magenta (tema 6)
-        [0x00c8ff, 0x0040ff],  // azul vivo (tema 7)
-        [0xff40c0, 0x8000ff],  // rosa-violeta (tema 8)
-        [0x40ff80, 0x00c0ff],  // verde-ciano (tema 9)
+        [0x00ff80, 0x0080ff],  // índigo-cósmico (tema 4 — lilás)
+        [0x00c8ff, 0x0040ff],  // azul noturno vivo (tema 7)
+        [0xff40c0, 0x8000ff],  // magenta (tema 8)
+        [0x40ff80, 0x00c0ff],  // floresta verde (tema 9)
+        [0x00ffcc, 0x4040ff],  // oceano profundo (tema 12)
+        [0xc040ff, 0x8000ff],  // violeta mágico (tema 13)
+        [0xa040ff, 0x0040e0],  // índigo cósmico (tema 17)
+        [0x40ff80, 0x00a040],  // verde floresta brilhante (tema 18)
       ];
-      const ac = auroraColors[(themeIdx - 4) % auroraColors.length];
+      const nightList = [...NIGHT_THEMES].sort((a,b)=>a-b);
+      const nightPos  = nightList.indexOf(themeIdx);
+      const ac = auroraColors[nightPos % auroraColors.length];
       const auroraCount = 5;
       for (let ai = 0; ai < auroraCount; ai++) {
         const ax = worldW * (0.1 + ai * 0.18);
@@ -5035,7 +5556,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // ── SOL — desenhado em sunGraphics (animado no update) ────────
     // Esconder o sol em temas noturnos
-    if(sunGraphics) sunGraphics.setAlpha((themeIdx>=4 && themeIdx<10) ? 0 : 1);
+    if(sunGraphics) sunGraphics.setAlpha(NIGHT_THEMES.has(themeIdx) ? 0 : 1);
 
     // ── ESTRELAS (temas noturnos, redesenhadas no update) ─────────
     starSeed=[]; // forçar reseed
@@ -5370,11 +5891,29 @@ window.addEventListener("DOMContentLoaded", () => {
   if(btnFsGame) btnFsGame.onclick=toggleFullscreen;
   window.addEventListener("keydown",e=>{ if(e.key?.toLowerCase()==="f"&&!e.target.matches("input")) toggleFullscreen(); });
 
+  // ===== Alto Contraste — tecla H =====
+  (()=>{
+    let hcOn = false;
+    function applyHC(on) {
+      hcOn = on;
+      document.body.classList.toggle("hc-mode", on);
+      try { localStorage.setItem("vanbertos_hc", on ? "1" : "0"); } catch {}
+    }
+    // Restaurar preferência guardada
+    try { if (localStorage.getItem("vanbertos_hc") === "1") applyHC(true); } catch {}
+    // Tecla H
+    window.addEventListener("keydown", e => {
+      if (e.key?.toLowerCase() === "h" && !e.target.matches("input")) {
+        applyHC(!hcOn);
+      }
+    });
+  })();
+
   btnStart.onclick=()=>{
     ensureAudio();SFX.coin();
     playerName=(playerNameInput?.value||"").trim();
     currentLevel=0;score=0;lives=3;livesLostThisLevel=0;
-    quizStats.total=0;quizStats.correct=0;quizStats.everWrong=false;quizStats.errors=[];
+    resetQuizStats();
     try{localStorage.removeItem(SAVE_KEY);}catch{}
     startOverlay.classList.add("hidden");
     document.body.classList.add("game-started");
@@ -5384,8 +5923,11 @@ window.addEventListener("DOMContentLoaded", () => {
       const waitScene = setInterval(() => {
         if (sceneRef) {
           clearInterval(waitScene);
-          // Phaser já criou playerNameHUD — agora é seguro fazer setText
-          if(playerNameHUD) playerNameHUD.setText(playerName ? `👤 ${playerName}` : "");
+          // Mostrar nome no elemento HTML
+          if(playerNameHUD){
+            playerNameHUD.textContent = playerName ? `⭐ ${playerName}` : "";
+            playerNameHUD.style.display = playerName ? "block" : "none";
+          }
           playLevelTransition(sceneRef, 0, () => {
             loadLevel(sceneRef, 0);
             showHistory(0, () => {
@@ -5456,7 +5998,9 @@ document.addEventListener("visibilitychange",()=>{
       const overlays=["startOverlay","quizOverlay","historyOverlay","gameOverOverlay","winOverlay"];
       const anyOpen=overlays.some(id=>{const el=document.getElementById(id);return el&&!el.classList.contains("hidden");});
       const isPaused=!!(document.getElementById("btnPause")?.textContent?.includes("Continuar"));
-      if(!anyOpen&&!isPaused) scene.physics.resume();
+      // Não retomar durante animação da porta ou quiz (awaitingQuiz cobre ambos)
+      const isAwaitingQuiz = typeof awaitingQuiz !== "undefined" && awaitingQuiz;
+      if(!anyOpen&&!isPaused&&!isAwaitingQuiz) scene.physics.resume();
     }
   }catch{}
 });

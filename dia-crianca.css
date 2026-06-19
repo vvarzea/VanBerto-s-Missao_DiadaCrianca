@@ -446,8 +446,8 @@ canvas { width: 100% !important; height: 100% !important; display: block; touch-
   border-left: 3px solid #ffd700;
   border-radius: 4px;
   padding: 8px 12px;
-  font-size: 11px;
-  color: #ffe0d0;
+  font-size: 13px;
+  color: #ffe8d0;
   font-style: italic;
   text-align: left;
   margin-bottom: 14px;
@@ -456,9 +456,9 @@ canvas { width: 100% !important; height: 100% !important; display: block; touch-
 .pause-tip b { color: #ffd700; font-style: normal; }
 
 .pause-controls-hint {
-  font-size: 10px;
+  font-size: 12px;
   color: #ff9060;
-  opacity: 0.8;
+  opacity: 0.9;
   margin-top: 10px;
   font-style: italic;
 }
@@ -492,12 +492,12 @@ canvas { width: 100% !important; height: 100% !important; display: block; touch-
     font-size: 14px;
   }
   .pause-tip {
-    font-size: 10px;
+    font-size: 12px;
     padding: 6px 10px;
     margin-bottom: 8px;
   }
   .pause-controls-hint {
-    font-size: 9px;
+    font-size: 11px;
     margin-top: 6px;
   }
 }
@@ -879,3 +879,198 @@ body.overlay-open #touchControls { opacity: 0 !important; pointer-events: none !
 @media (min-width: 600px) and (max-width: 1024px) and (orientation: portrait) {
   #teacherControls { top: 8px; right: 8px; }
 }
+
+/* =====================================================
+   ALTO CONTRASTE — ativado com tecla H
+   Substitui todas as cores por preto/branco/amarelo puro
+   para máxima legibilidade (dislexia, baixa visão)
+   ===================================================== */
+body.hc-mode {
+  background: #000 !important;
+  color: #fff !important;
+}
+
+/* Overlays */
+body.hc-mode .overlay {
+  background: #000 !important;
+  animation: none !important;
+}
+body.hc-mode .card {
+  background: #000 !important;
+  border: 3px solid #fff !important;
+  box-shadow: none !important;
+}
+body.hc-mode .card::before,
+body.hc-mode .card::after { display: none; }
+body.hc-mode .card-seal { display: none; }
+
+/* Texto */
+body.hc-mode h1,
+body.hc-mode h2,
+body.hc-mode .card h1,
+body.hc-mode .card h2 {
+  color: #ffff00 !important;
+  text-shadow: none !important;
+  border-color: #fff !important;
+}
+body.hc-mode .sub,
+body.hc-mode .desc,
+body.hc-mode .tiny,
+body.hc-mode .q,
+body.hc-mode .history-text,
+body.hc-mode .history-subtitle,
+body.hc-mode p,
+body.hc-mode li {
+  color: #fff !important;
+}
+body.hc-mode .explanation,
+body.hc-mode .feedback {
+  color: #ffff00 !important;
+  font-weight: 700 !important;
+}
+body.hc-mode .feedback[style*="208050"],
+body.hc-mode .feedback[style*="green"] { color: #00ff88 !important; }
+
+/* Botões */
+body.hc-mode .btn {
+  background: #000 !important;
+  border: 2.5px solid #fff !important;
+  color: #ffff00 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+body.hc-mode .btn:hover:not(:disabled),
+body.hc-mode .btn:focus {
+  background: #333 !important;
+  border-color: #ffff00 !important;
+  outline: 3px solid #ffff00;
+  transform: none !important;
+}
+body.hc-mode .btn.primary {
+  background: #ffff00 !important;
+  color: #000 !important;
+  border-color: #fff !important;
+}
+body.hc-mode .btn.primary:hover:not(:disabled) {
+  background: #fff !important;
+}
+
+/* Respostas do quiz */
+body.hc-mode .answers .btn { font-size: 15px !important; }
+body.hc-mode .answers .btn[style*="20,80,20"],
+body.hc-mode .answers .btn[style*="background: rgba(20"] {
+  background: #004400 !important;
+  border-color: #00ff88 !important;
+  color: #00ff88 !important;
+}
+body.hc-mode .answers .btn[style*="100,20,20"],
+body.hc-mode .answers .btn[style*="background: rgba(100"] {
+  background: #440000 !important;
+  border-color: #ff4444 !important;
+  color: #ff4444 !important;
+}
+
+/* Pausa */
+body.hc-mode .pause-card {
+  background: #000 !important;
+  border: 2px solid #fff !important;
+  box-shadow: none !important;
+}
+body.hc-mode .pause-title { color: #ffff00 !important; text-shadow: none !important; }
+body.hc-mode .pause-info-box { background: #111 !important; border-color: #888 !important; }
+body.hc-mode .pause-info-box strong { color: #ffff00 !important; }
+body.hc-mode .pause-info-val { color: #fff !important; }
+body.hc-mode .pause-tip { background: #111 !important; border-color: #fff !important; color: #fff !important; }
+body.hc-mode .pause-controls-hint { color: #ccc !important; opacity: 1 !important; }
+
+/* HUD teacher controls */
+body.hc-mode #teacherControls .btn { border-color: #aaa !important; }
+
+/* Indicador HC no canto */
+#hc-indicator {
+  display: none;
+  position: fixed;
+  bottom: 8px; left: 50%;
+  transform: translateX(-50%);
+  background: #ffff00;
+  color: #000;
+  font-family: 'Baloo 2', sans-serif;
+  font-weight: 900;
+  font-size: 12px;
+  padding: 3px 12px;
+  border-radius: 20px;
+  z-index: 9999;
+  pointer-events: none;
+  letter-spacing: 0.5px;
+}
+body.hc-mode #hc-indicator { display: block; }
+
+/* =====================================================
+   CRACHÁ DO ARTIGO DA CONVENÇÃO (quiz)
+   ===================================================== */
+.quiz-article-badge {
+  display: inline-block;
+  background: rgba(255,215,0,0.14);
+  border: 1px solid rgba(255,215,0,0.40);
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #ffd700;
+  letter-spacing: 0.2px;
+  margin-bottom: 8px;
+  font-family: 'Baloo 2', sans-serif;
+}
+body.hc-mode .quiz-article-badge {
+  background: #000 !important;
+  border-color: #ffff00 !important;
+  color: #ffff00 !important;
+}
+
+/* =====================================================
+   MODO REVISÃO
+   ===================================================== */
+#btnReviewMode {
+  margin-top: 10px;
+  width: 100%;
+  background: linear-gradient(180deg, #1a4030 0%, #0d2820 100%);
+  border-color: #40c080;
+  color: #b0ffe0;
+}
+#btnReviewMode:hover:not(:disabled) {
+  background: linear-gradient(180deg, #256040 0%, #183820 100%);
+}
+#reviewOverlay .card {
+  max-height: 88dvh;
+  overflow-y: auto;
+}
+.review-question {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,215,0,0.18);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.review-question-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffe8d0;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+.review-wrong  { font-size: 12px; color: #ff8060; margin-bottom: 2px; }
+.review-correct { font-size: 12px; color: #70ffb0; margin-bottom: 4px; }
+.review-explanation {
+  font-size: 11px;
+  color: #ffd090;
+  font-style: italic;
+  line-height: 1.55;
+  border-top: 1px solid rgba(255,215,0,0.12);
+  padding-top: 5px;
+  margin-top: 4px;
+}
+body.hc-mode .review-question { background: #111 !important; border-color: #888 !important; }
+body.hc-mode .review-question-text { color: #fff !important; }
+body.hc-mode .review-wrong  { color: #ff6666 !important; font-weight: 700; }
+body.hc-mode .review-correct { color: #00ff88 !important; font-weight: 700; }
+body.hc-mode .review-explanation { color: #ffff00 !important; border-color: #555 !important; }
