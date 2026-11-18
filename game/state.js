@@ -7,8 +7,8 @@
  * Estado partilhado: LÊ-SE diretamente (import); para ALTERAR usa as funções set_<nome>() — os imports ES são só de leitura.
  *************************************************/
 
-import { loadNamespace, saveNamespace } from "../storage.js?v=20261118dc1";
-import { QUIZ_BY_THEME, QUIZ_BY_THEME_AVANCADO } from "../data-quiz.js?v=20261118dc1";
+import { loadNamespace, saveNamespace } from "../storage.js?v=20261118dc2";
+import { QUIZ_BY_THEME, QUIZ_BY_THEME_AVANCADO, QUIZ_BY_THEME_EXTREMO } from "../data-quiz.js?v=20261118dc2";
 
 export let playerName = "";
 
@@ -347,8 +347,12 @@ export function isStarAllowedExtremo(levelIdx, starOrderIdx) {
 
 export function getQuizPool(theme) {
   const base = QUIZ_BY_THEME[theme] || QUIZ_BY_THEME["historia"];
-  // Extremo usa o mesmo banco avançado do Difícil (não há um 3º banco
-  // dedicado) — nunca deve voltar ao banco base, que seria mais fácil.
+  // Fácil: banco base. Difícil: avançado. Extremo: banco próprio; se o tema não tiver, usa o avançado
+  // (nunca volta ao base, que seria mais fácil).
+  if (difficulty === "extremo") {
+    const ext = QUIZ_BY_THEME_EXTREMO[theme];
+    if (ext && ext.length) return ext;
+  }
   if (difficulty !== "facil") {
     const adv = QUIZ_BY_THEME_AVANCADO[theme];
     if (adv && adv.length) return adv;

@@ -5,8 +5,8 @@ Motor da Missão Internet Segura v14 (chaves, blocos «?», plataformas que caem
 
 - Conteúdo: `data-levels.js`, `data-quiz.js`, `data-story.js`, `data-bosses.js`, `data-progression.js`, `data-flavor.js`.
 - Motor: `game/`. Desenhos dos bosses e itens: `textures.js`.
-- Difícil e Extremo usam o mesmo banco de perguntas do Fácil (`QUIZ_BY_THEME_AVANCADO` está vazio).
+- Perguntas: temas 4–11 com banco Fácil, Difícil e Extremo (data-quiz.js); os restantes temas usam o banco base nas 3 dificuldades.
 - Gravação: chave `vanbertos_dia_crianca_save_v1`.
 
-- Versão: v1 (carimbo 20261118dc1, igual no sw.js, no index.html e nos imports).
+- Versão: v2 (carimbo 20261118dc2, igual no sw.js, no index.html e nos imports).
 - Ao publicar uma nova versão, muda esse carimbo em todos os ficheiros para os telemóveis largarem a cache antiga.
