@@ -7,21 +7,21 @@
  * As variáveis de estado vivem em state.js; aqui alteram-se com set_<nome>().
  *************************************************/
 
-import { clearMiniViruses, clearPopupHazard, clearToxicZones, currentContaminationZones, currentPopupConfig, doBossTeleport, showBossLaugh, spawnToxicZones, startPhishingDecoy, stopPhishingDecoy, triggerBossBlackout, updateToxicZones } from "./boss-attacks.js?v=20261108is20";
-import { destroyBossHpBar, drawBossHpBar, enterBossPhase, startBossFinalStandBurst } from "./boss-core.js?v=20261108is20";
-import { startBossQuizPhase } from "./boss-end.js?v=20261108is20";
-import { vbSayRandom } from "./dialogue.js?v=20261108is20";
-import { hitFlash } from "./dom.js?v=20261108is20";
-import { applyHitStop, showFloat } from "./feedback.js?v=20261108is20";
-import { showGameOver } from "./flow.js?v=20261108is20";
-import { setInvuln } from "./items.js?v=20261108is20";
-import { clearExtremoAllies, spawnExtremoReinforcement, updateHearts } from "./level.js?v=20261108is20";
-import { snapPlayerToGround } from "./rooms.js?v=20261108is20";
-import { awaitingQuiz, bossExtremoAllies, bossLockIcon, bossMiniViruses, bossOverlay, bossRageIcon, bossState, bossTimers, difficulty, heartsGfx, inBossFight, invuln, itemCountText, itemsGroup, lives, livesLostThisLevel, player, sceneRef, score, scoreText, set__hudDirty, set_awaitingQuiz, set_bossExtremoAllies, set_bossLockIcon, set_bossMiniViruses, set_bossOverlay, set_bossPopupAnchors, set_bossRageIcon, set_bossTimers, set_controlsInvertedUntil, set_invuln, set_lives, set_livesLostThisLevel, set_score, starPower, tipText } from "./state.js?v=20261108is20";
-import { triggerVanBertoSad } from "./vanberto.js?v=20261108is20";
-import { ensureAudio, beep, SFX } from "../audio.js?v=20261108is20";
-import { BOSS_HP_TAUNTS } from "../data-story.js?v=20261108is20";
-import { VB_STAR_POWER } from "../data-flavor.js?v=20261108is20";
+import { clearMiniViruses, clearPopupHazard, clearToxicZones, currentContaminationZones, currentPopupConfig, doBossTeleport, showBossLaugh, spawnToxicZones, startPhishingDecoy, stopPhishingDecoy, triggerBossBlackout, updateToxicZones } from "./boss-attacks.js?v=20261118dc1";
+import { destroyBossHpBar, drawBossHpBar, enterBossPhase, startBossFinalStandBurst } from "./boss-core.js?v=20261118dc1";
+import { startBossQuizPhase } from "./boss-end.js?v=20261118dc1";
+import { vbSayRandom } from "./dialogue.js?v=20261118dc1";
+import { hitFlash } from "./dom.js?v=20261118dc1";
+import { applyHitStop, showFloat } from "./feedback.js?v=20261118dc1";
+import { showGameOver } from "./flow.js?v=20261118dc1";
+import { setInvuln } from "./items.js?v=20261118dc1";
+import { clearExtremoAllies, spawnExtremoReinforcement, updateHearts } from "./level.js?v=20261118dc1";
+import { snapPlayerToGround } from "./rooms.js?v=20261118dc1";
+import { awaitingQuiz, bossExtremoAllies, bossLockIcon, bossMiniViruses, bossOverlay, bossRageIcon, bossState, bossTimers, difficulty, heartsGfx, inBossFight, invuln, itemCountText, itemsGroup, lives, livesLostThisLevel, player, sceneRef, score, scoreText, set__hudDirty, set_awaitingQuiz, set_bossExtremoAllies, set_bossLockIcon, set_bossMiniViruses, set_bossOverlay, set_bossPopupAnchors, set_bossRageIcon, set_bossTimers, set_controlsInvertedUntil, set_invuln, set_lives, set_livesLostThisLevel, set_score, starPower, tipText } from "./state.js?v=20261118dc1";
+import { triggerVanBertoSad } from "./vanberto.js?v=20261118dc1";
+import { ensureAudio, beep, SFX } from "../audio.js?v=20261118dc1";
+import { BOSS_HP_TAUNTS } from "../data-story.js?v=20261118dc1";
+import { VB_STAR_POWER } from "../data-flavor.js?v=20261118dc1";
 
 // Reação exagerada tipo desenho animado sempre que QUALQUER boss é atingido:
 // achata-se por meio segundo (textura "_ouch" + squash) e volta ao normal,
@@ -904,7 +904,7 @@ function startBossCollectPhase() {
   clearExtremoAllies(); // idem para o reforço do Extremo, se tiver sido chamado
   itemsGroup.getChildren().slice().forEach(o => { if((o.getData("kind")==="estrela" || o.getData("bossCharge")) && !o.getData("bossCollect")) o.destroy(); });
   const keyMap = { estrela:"item_estrela", heart:"item_heart", medalha:"item_medalha",
-                   brinquedo:"item_chip", balao:"item_chave", livro:"item_livro" };
+                   brinquedo:"item_brinquedo", balao:"item_chupachupa", livro:"item_livro" };
   const key = keyMap[bossState.def.collectKind] || "item_estrela";
   for (let i=0;i<bossState.def.collectCount;i++){
     const collectWorldW = bossState.def.arena?.worldW || 1600;

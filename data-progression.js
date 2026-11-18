@@ -8,10 +8,10 @@
 // próprio (Saúde) no conteúdo atual do jogo, por isso fica junto ao
 // prólogo histórico no 1º mundo, em vez de sozinho num "mundo" de 1 nível.
 export const MAP_REGIONS = [
-  { id:"origens",        icon:"📜", name:"Reino das Origens",       sub:"A história dos direitos — e a Saúde",     levels:[0,1,2,3,4] },
-  { id:"desenvolvimento",icon:"📚", name:"Vale do Desenvolvimento", sub:"Brincar, futuro, cultura e educação",     levels:[5,6,7,8] },
-  { id:"protecao",       icon:"🛡️", name:"Fortaleza da Proteção",   sub:"Família, refúgio, trabalho e ambiente",   levels:[9,10,11,12,13,14] },
-  { id:"participacao",   icon:"🗣️", name:"Cidade da Participação",  sub:"Identidade, privacidade e expressão",     levels:[15,16,17,18,19] },
+  { id:"origens", nodePos:[{x:14,y:81},{x:32,y:84},{x:50,y:78},{x:68,y:74},{x:86,y:78}], mapBg:"map-mundo1.webp",        icon:"📜", name:"Reino das Origens",       sub:"A história dos direitos — e a Saúde",     levels:[0,1,2,3,4] },
+  { id:"desenvolvimento", nodePos:[{x:14,y:81},{x:38,y:84},{x:62,y:78},{x:86,y:74}], mapBg:"map-mundo2.webp",icon:"📚", name:"Vale do Desenvolvimento", sub:"Brincar, futuro, cultura e educação",     levels:[5,6,7,8] },
+  { id:"protecao", nodePos:[{x:14,y:81},{x:28,y:84},{x:43,y:78},{x:57,y:74},{x:72,y:78},{x:86,y:84}], mapBg:"map-mundo3.webp",       icon:"🛡️", name:"Fortaleza da Proteção",   sub:"Família, refúgio, trabalho e ambiente",   levels:[9,10,11,12,13,14] },
+  { id:"participacao", nodePos:[{x:14,y:81},{x:32,y:84},{x:50,y:78},{x:68,y:74},{x:86,y:78}], mapBg:"map-mundo4.webp",   icon:"🗣️", name:"Cidade da Participação",  sub:"Identidade, privacidade e expressão",     levels:[15,16,17,18,19] },
   { id:"base",           icon:"🏠", name:"Base do VanBerto's",       sub:"O teu ponto de partida",                  levels:[] },
 ];
 

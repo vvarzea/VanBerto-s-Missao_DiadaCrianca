@@ -7,20 +7,20 @@
  * As variáveis de estado vivem em state.js; aqui alteram-se com set_<nome>().
  *************************************************/
 
-import { hitFlash } from "./dom.js?v=20261108is20";
-import { applyHitStop, showFloat } from "./feedback.js?v=20261108is20";
-import { showGameOver } from "./flow.js?v=20261108is20";
-import { clearPower, setInvuln } from "./items.js?v=20261108is20";
-import { updateHearts } from "./level.js?v=20261108is20";
-import { saveGame } from "./overlays.js?v=20261108is20";
-import { snapPlayerToGround } from "./rooms.js?v=20261108is20";
-import { _critterSession, _overlayPaused, awaitingQuiz, balloons, collectedItemIndices, collectedRoomPipes, critters, currentLevel, currentSign, decorativePipes, extraShieldCounted, getVillainSpeedMult, hazards, invuln, isStarAllowedExtremo, itemCountText, itemsCollected, itemsGroup, itemsTotal, lives, livesLostThisLevel, malwareGroup, movingPlatforms, pausedByTeacher, pipeHintSign, player, powered, sceneRef, secretDoors, secretSigns, set__critterSession, set__hudDirty, set_awaitingQuiz, set_balloons, set_critters, set_currentSign, set_extraShieldCounted, set_hazards, set_invuln, set_itemsCollected, set_itemsTotal, set_lives, set_livesLostThisLevel, set_movingPlatforms, set_pipeHintSign, set_secretDoors, set_secretSigns, set_trampolines, tipText, touch, trampolines } from "./state.js?v=20261108is20";
-import { triggerVanBertoSad } from "./vanberto.js?v=20261108is20";
-import { THEMES, LEVELS } from "../data-levels.js?v=20261108is20";
-import { makePlatformTextureThemed } from "../textures.js?v=20261108is20";
-import { ensureAudio, SFX, beep } from "../audio.js?v=20261108is20";
-import { onSecretFoundForAchievements } from "../achievements.js?v=20261108is20";
-import { NPC_SIGNS } from "../data-story.js?v=20261108is20";
+import { hitFlash } from "./dom.js?v=20261118dc1";
+import { applyHitStop, showFloat } from "./feedback.js?v=20261118dc1";
+import { showGameOver } from "./flow.js?v=20261118dc1";
+import { clearPower, setInvuln } from "./items.js?v=20261118dc1";
+import { updateHearts } from "./level.js?v=20261118dc1";
+import { saveGame } from "./overlays.js?v=20261118dc1";
+import { snapPlayerToGround } from "./rooms.js?v=20261118dc1";
+import { _critterSession, _overlayPaused, awaitingQuiz, balloons, collectedItemIndices, collectedRoomPipes, critters, currentLevel, currentSign, decorativePipes, extraShieldCounted, getVillainSpeedMult, hazards, invuln, isStarAllowedExtremo, itemCountText, itemsCollected, itemsGroup, itemsTotal, lives, livesLostThisLevel, malwareGroup, movingPlatforms, pausedByTeacher, pipeHintSign, player, powered, sceneRef, secretDoors, secretSigns, set__critterSession, set__hudDirty, set_awaitingQuiz, set_balloons, set_critters, set_currentSign, set_extraShieldCounted, set_hazards, set_invuln, set_itemsCollected, set_itemsTotal, set_lives, set_livesLostThisLevel, set_movingPlatforms, set_pipeHintSign, set_secretDoors, set_secretSigns, set_trampolines, tipText, touch, trampolines } from "./state.js?v=20261118dc1";
+import { triggerVanBertoSad } from "./vanberto.js?v=20261118dc1";
+import { THEMES, LEVELS } from "../data-levels.js?v=20261118dc1";
+import { makePlatformTextureThemed } from "../textures.js?v=20261118dc1";
+import { ensureAudio, SFX, beep } from "../audio.js?v=20261118dc1";
+import { onSecretFoundForAchievements } from "../achievements.js?v=20261118dc1";
+import { NPC_SIGNS } from "../data-story.js?v=20261118dc1";
 
 // ===== Balões flutuantes apanháveis =====
 
@@ -31,7 +31,7 @@ export function spawnBalloons(scene,worldW) {
   for(let i=0;i<count;i++){
     const x=80+Math.random()*(worldW-160);
     const y=80+Math.random()*380; // espalhados pelo ar
-    const bKey="item_cadeado_"+(i%6);
+    const bKey="item_balao_"+(i%6);
     const sprite=scene.add.image(x,y,bKey).setDepth(1).setScale(0.85).setAlpha(0.92);
     balloons.push({
       sprite, x, y,
@@ -481,9 +481,9 @@ function hitByHazard(scene, h) {
   collectedRoomPipes.clear();
   set_itemsCollected( 0);
   itemCountText.setText(`⭐ Itens: ${itemsCollected}/${itemsTotal}`);
-  const keyMap = { estrela:"item_estrela", balao:"item_chave", brinquedo:"item_chip",
+  const keyMap = { estrela:"item_estrela", balao:"item_chupachupa", brinquedo:"item_brinquedo",
                    medalha:"item_medalha", heart:"item_heart", duplosalto:"item_duplosalto",
-                   balaofesta:"item_cadeado_2" };
+                   balaofesta:"item_balao_2" };
   let _starIdxRespawn = 0;
   LEVELS[currentLevel].items.forEach((it, idx) => {
     // Extremo — mesma regra de isStarAllowedExtremo() usada em loadLevel():
@@ -606,11 +606,11 @@ export function updateSecrets(scene) {
     scene.time.delayedCall(380,()=>burst.destroy());
 
     // ── Item bónus ─────────────────────────────────────────────
-    // balao -> item_chave (não item_cadeado_0): a "Chave de Acesso" já
+    // balao -> item_chupachupa (não item_balao_0): a "Chave de Acesso" já
     // usa este ícone em todo o resto do jogo (ver ITEM_LABELS/keyMap
     // principais) — aqui ainda apontava para o cadeado antigo, mostrando
     // um ícone diferente do rótulo "🔑 Chave de Acesso +10".
-    const keyMap = { estrela:"item_estrela", medalha:"item_medalha", heart:"item_heart", brinquedo:"item_chip", duplosalto:"item_duplosalto", balao:"item_chave" };
+    const keyMap = { estrela:"item_estrela", medalha:"item_medalha", heart:"item_heart", brinquedo:"item_brinquedo", duplosalto:"item_duplosalto", balao:"item_chupachupa" };
     const it = itemsGroup.create(s.x, s.y-40, keyMap[s.kind]||"item_estrela");
     it.setDepth(3);
     it.setData("kind", s.kind);

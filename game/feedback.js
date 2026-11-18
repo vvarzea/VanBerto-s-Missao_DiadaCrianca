@@ -7,7 +7,7 @@
  * As variáveis de estado vivem em state.js; aqui alteram-se com set_<nome>().
  *************************************************/
 
-import { PRAISE } from "../data-flavor.js?v=20261108is20";
+import { PRAISE } from "../data-flavor.js?v=20261118dc1";
 
 // ===== Elogios =====
 

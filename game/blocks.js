@@ -12,14 +12,14 @@
  * escondidos nas salas secretas, sem mexer nesses sistemas.
  *************************************************/
 
-import { platforms, itemsGroup, player, powered, starPower, lives, set_lives, getMaxLives, score, set_score, scoreText, set__hudDirty, difficulty } from "./state.js?v=20261108is20";
-import { showFloat } from "./feedback.js?v=20261108is20";
-import { makePlatformTextureThemed } from "../textures.js?v=20261108is20";
-import { ensureAudio, SFX, beep } from "../audio.js?v=20261108is20";
-import { THEMES } from "../data-levels.js?v=20261108is20";
-import { onHitMalware } from "./items.js?v=20261108is20";
-import { updateHearts } from "./level.js?v=20261108is20";
-import { loadNamespace, saveNamespace } from "../storage.js?v=20261108is20";
+import { platforms, itemsGroup, player, powered, starPower, lives, set_lives, getMaxLives, score, set_score, scoreText, set__hudDirty, difficulty } from "./state.js?v=20261118dc1";
+import { showFloat } from "./feedback.js?v=20261118dc1";
+import { makePlatformTextureThemed } from "../textures.js?v=20261118dc1";
+import { ensureAudio, SFX, beep } from "../audio.js?v=20261118dc1";
+import { THEMES } from "../data-levels.js?v=20261118dc1";
+import { onHitMalware } from "./items.js?v=20261118dc1";
+import { updateHearts } from "./level.js?v=20261118dc1";
+import { loadNamespace, saveNamespace } from "../storage.js?v=20261118dc1";
 
 const BLOCK = 40;
 let windVx = 0;
@@ -42,7 +42,7 @@ function ensureKeyHud(scene) {
 }
 function updateKeyHud() {
   if (!keyText || !keyText.active) return;
-  keyText.setText(`🔑 ${loadKeys().count}/${KEY_GOAL}`);
+  keyText.setText(`🎈 ${loadKeys().count}/${KEY_GOAL}`);
   if (scoreText && scoreText.active) keyText.setPosition(scoreText.x + scoreText.displayWidth + 10, scoreText.y);
 }
 /** Soma n chaves (+10 pontos cada). Às 100 chaves: +1 vida (ou pontos extra se já tiveres o máximo). */
@@ -56,10 +56,10 @@ function addKeys(scene, n, x, y) {
     const px = player ? player.x : x, py = player ? player.y : y;
     if (lives < getMaxLives()) {
       set_lives(lives + 1); updateHearts(); SFX.life();
-      showFloat(scene, px, py - 100, "🔑 100 chaves! +1 vida ❤️", "#1e1b4b");
+      showFloat(scene, px, py - 100, "🎈 100 balões! +1 vida ❤️", "#1e1b4b");
     } else {
       addPoints(500);
-      showFloat(scene, px, py - 100, "🔑 100 chaves! +500 pontos", "#1e1b4b");
+      showFloat(scene, px, py - 100, "🎈 100 balões! +500 pontos", "#1e1b4b");
     }
   }
   saveKeys(); updateKeyHud();
@@ -163,17 +163,23 @@ function makeObstacleTextures(scene) {
     draw(t.getContext());
     t.refresh();
   };
-  mk("fw_beam", 26, 140, c => {            // feixe do firewall (vermelho-rosa a brilhar)
+  mk("fw_beam", 26, 140, c => {            // jato de fogo-de-artifício (dourado-laranja a brilhar)
     const g = c.createLinearGradient(0, 0, 26, 0);
-    g.addColorStop(0, "rgba(255,60,110,0)"); g.addColorStop(0.5, "rgba(255,90,130,0.95)"); g.addColorStop(1, "rgba(255,60,110,0)");
+    g.addColorStop(0, "rgba(255,150,30,0)"); g.addColorStop(0.5, "rgba(255,196,40,0.95)"); g.addColorStop(1, "rgba(255,150,30,0)");
     c.fillStyle = g; c.fillRect(0, 0, 26, 140);
     c.fillStyle = "rgba(255,255,255,0.9)"; c.fillRect(11, 0, 4, 140);
+    c.fillStyle = "rgba(255,255,255,0.95)";
+    [[6, 14], [19, 38], [8, 62], [18, 90], [7, 116]].forEach(([x, y]) => {   // faíscas em estrela
+      c.beginPath(); c.moveTo(x, y - 5); c.lineTo(x + 1.5, y - 1.5); c.lineTo(x + 5, y); c.lineTo(x + 1.5, y + 1.5);
+      c.lineTo(x, y + 5); c.lineTo(x - 1.5, y + 1.5); c.lineTo(x - 5, y); c.lineTo(x - 1.5, y - 1.5); c.closePath(); c.fill();
+    });
   });
-  mk("fw_post", 34, 22, c => {             // base/emissor do firewall
+  mk("fw_post", 34, 22, c => {             // tubo do foguete (base do jato)
     c.fillStyle = "#1e1b4b"; c.fillRect(0, 4, 34, 18);
-    c.fillStyle = "#4b5bd6"; c.fillRect(2, 6, 30, 14);
-    c.fillStyle = "#9ff0ff"; c.fillRect(11, 1, 12, 6);
-    c.fillStyle = "#1e1b4b"; c.fillRect(10, 0, 14, 2);
+    c.fillStyle = "#e8403a"; c.fillRect(2, 6, 30, 14);
+    c.fillStyle = "#ffd21f"; c.fillRect(2, 11, 30, 4);
+    c.fillStyle = "#ffb347"; c.fillRect(14, 1, 6, 6);
+    c.fillStyle = "#1e1b4b"; c.fillRect(13, 0, 8, 2);
   });
   mk("crumble", 140, 22, c => {            // plataforma frágil (pedra gretada)
     c.fillStyle = "#1e1b4b"; c.fillRect(0, 0, 140, 22);
@@ -190,13 +196,11 @@ function makeKeyTexture(scene) {
   if (scene.textures.exists("key_item")) return;
   const t = scene.textures.createCanvas("key_item", 34, 34);
   const c = t.getContext();
-  c.lineWidth = 3; c.strokeStyle = "#1e1b4b"; c.fillStyle = "#ffd21f";
-  c.beginPath(); c.arc(11, 11, 8, 0, 7); c.fill(); c.stroke();               // argola
-  c.fillStyle = "#fff6e3"; c.beginPath(); c.arc(11, 11, 3, 0, 7); c.fill();  // furo
-  c.fillStyle = "#ffd21f"; c.fillRect(16, 9, 15, 5); c.strokeRect(16, 9, 15, 5);  // haste
-  c.fillRect(23, 14, 4, 7); c.strokeRect(23, 14, 4, 7);                       // dentes
-  c.fillRect(28, 14, 3, 5); c.strokeRect(28, 14, 3, 5);
-  c.fillStyle = "rgba(255,255,255,0.7)"; c.fillRect(6, 5, 5, 3);
+  c.lineWidth = 2.5; c.strokeStyle = "#1e1b4b";
+  c.beginPath(); c.moveTo(17, 25); c.quadraticCurveTo(13, 29, 18, 33); c.stroke();            // fio
+  c.fillStyle = "#ff4d6d"; c.beginPath(); c.ellipse(17, 14, 10, 12, 0, 0, 7); c.fill(); c.stroke();  // balão
+  c.beginPath(); c.moveTo(17, 25); c.lineTo(14, 29); c.lineTo(20, 29); c.closePath(); c.fill(); c.stroke(); // nó
+  c.fillStyle = "rgba(255,255,255,0.75)"; c.beginPath(); c.ellipse(12.5, 9, 2.6, 4.2, -0.5, 0, 7); c.fill();
   t.refresh();
 }
 
@@ -296,9 +300,9 @@ function releaseContent(scene, b) {
   let kind = b.getData("content") || "moeda";
   if (kind === "heart" && lives >= getMaxLives()) kind = "moeda";
   if (kind === "moeda") {
-    const coin = scene.add.text(b.x, b.y - 26, "🔑", { fontSize: "26px" }).setOrigin(0.5).setDepth(6);
+    const coin = scene.add.text(b.x, b.y - 26, "🎈", { fontSize: "26px" }).setOrigin(0.5).setDepth(6);
     scene.tweens.add({ targets: coin, y: coin.y - 52, alpha: 0, duration: 520, ease: "Quad.easeOut", onComplete: () => coin.destroy() });
-    showFloat(scene, b.x, b.y - 60, "+1 🔑", "#1e1b4b");
+    showFloat(scene, b.x, b.y - 60, "+1 🎈", "#1e1b4b");
     addKeys(scene, 1, b.x, b.y);
     return;
   }
@@ -464,7 +468,7 @@ export function addBlocksAndPlatforms(scene, L, idx) {
     }
   }
 
-  // 3b) Firewalls: feixes que ligam e desligam (com aviso a piscar antes de ligar)
+  // 3b) Jatos de fogo-de-artifício: feixes que ligam e desligam (com aviso a piscar antes de ligar)
   const nBeams = idx >= 3 ? (idx >= 10 ? 2 : 1) + (idx >= 16 ? 1 : 0) : 0;
   let nb = 0;
   for (const pass of [0, 1]) {
@@ -513,7 +517,7 @@ export function addBlocksAndPlatforms(scene, L, idx) {
     }
   }
 
-  // 4) Chaves 🔑 espalhadas, como as moedas do Super Mário (arcos no chão e filas por cima das plataformas)
+  // 4) Balões 🎈 espalhados, como as moedas do Super Mário (arcos no chão e filas por cima das plataformas)
   const doneKeys = takenSet();
   let kn = 0;
   const putKey = (x, y) => {

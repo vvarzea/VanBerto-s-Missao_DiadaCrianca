@@ -7,23 +7,23 @@
  * As variáveis de estado vivem em state.js; aqui alteram-se com set_<nome>().
  *************************************************/
 
-import { vbSay } from "./dialogue.js?v=20261108is20";
-import { startOverlay } from "./dom.js?v=20261108is20";
-import { playLevelTransition } from "./door.js?v=20261108is20";
-import { loadLevel } from "./level.js?v=20261108is20";
-import { openOverlay, saveGame } from "./overlays.js?v=20261108is20";
-import { showHistory } from "./quiz.js?v=20261108is20";
-import { initPhaser } from "./scene.js?v=20261108is20";
-import { currentLevel, getStartLives, mapProgress, pausedByTeacher, playerName, playerNameHUD, powerHaloGfx, sceneRef, score, set__historySubOpen, set__overlayPaused, set__winOverlaySubOpen, set_currentLevel, set_lives, shadowGfx } from "./state.js?v=20261108is20";
-import { loadNamespace, saveNamespace } from "../storage.js?v=20261108is20";
-import { MAP_REGIONS } from "../data-progression.js?v=20261108is20";
-import { applyBackground as applyBackgroundRaw } from "../background.js?v=20261108is20";
-import { LEVELS, THEMES } from "../data-levels.js?v=20261108is20";
-import { ensureAudio, SFX } from "../audio.js?v=20261108is20";
-import { playTitleCard } from "../cinematics.js?v=20261108is20";
-import { starsForLevel } from "../stars.js?v=20261108is20";
-import { REGION_INTRO } from "../data-story.js?v=20261108is20";
-import { VB_LEVEL_INTRO } from "../data-flavor.js?v=20261108is20";
+import { vbSay } from "./dialogue.js?v=20261118dc1";
+import { startOverlay } from "./dom.js?v=20261118dc1";
+import { playLevelTransition } from "./door.js?v=20261118dc1";
+import { loadLevel } from "./level.js?v=20261118dc1";
+import { openOverlay, saveGame } from "./overlays.js?v=20261118dc1";
+import { showHistory } from "./quiz.js?v=20261118dc1";
+import { initPhaser } from "./scene.js?v=20261118dc1";
+import { currentLevel, getStartLives, mapProgress, pausedByTeacher, playerName, playerNameHUD, powerHaloGfx, sceneRef, score, set__historySubOpen, set__overlayPaused, set__winOverlaySubOpen, set_currentLevel, set_lives, shadowGfx } from "./state.js?v=20261118dc1";
+import { loadNamespace, saveNamespace } from "../storage.js?v=20261118dc1";
+import { MAP_REGIONS } from "../data-progression.js?v=20261118dc1";
+import { applyBackground as applyBackgroundRaw } from "../background.js?v=20261118dc1";
+import { LEVELS, THEMES } from "../data-levels.js?v=20261118dc1";
+import { ensureAudio, SFX } from "../audio.js?v=20261118dc1";
+import { playTitleCard } from "../cinematics.js?v=20261118dc1";
+import { starsForLevel } from "../stars.js?v=20261118dc1";
+import { REGION_INTRO } from "../data-story.js?v=20261118dc1";
+import { VB_LEVEL_INTRO } from "../data-flavor.js?v=20261118dc1";
 
 
 // ===== Dicas =====
@@ -71,28 +71,7 @@ export function regionForLevel(idx) {
 // acrescentados mundo a mundo. Um nível sem entrada aqui usa o fundo
 // único do seu mundo (mapBg / regionForLevel), como até agora.
 
-const LEVEL_BG_OVERRIDE = {
-  0: "bg_mundo1_n1e2", // Nível 1
-  1: "bg_mundo1_n1e2", // Nível 2
-  2: "bg_mundo1_n3e4", // Nível 3
-  3: "bg_mundo1_n3e4", // Nível 4
-  4: "bg_mundo1_n5",   // Nível 5
-  5: "bg_mundo2_n6",   // Nível 6
-  6: "bg_mundo2_n7",   // Nível 7
-  7: "bg_mundo2_n8",
-  8: "bg_mundo2_n9",   // Nível 9
-  9: "bg_mundo2_n9",   // Nível 10 (agora fecha o Mundo 2)
-  10: "bg_mundo3_n10e11", // Nível 11
-  11: "bg_mundo3_n12e13", // Nível 12
-  12: "bg_mundo3_n12e13", // Nível 13
-  13: "bg_mundo3_n14e15", // Nível 14
-  14: "bg_mundo3_n14e15", // Nível 15
-  15: "bg_mundo4_n16e17", // Nível 16
-  16: "bg_mundo4_n16e17", // Nível 17
-  17: "bg_mundo4_n18e19", // Nível 18
-  18: "bg_mundo4_n18e19", // Nível 19
-  19: "bg_mundo4_n20",    // Nível 20 (final)
-};
+const LEVEL_BG_OVERRIDE = {}; // um fundo por mundo (bg_<id da região>)
 
 // Chave da textura Phaser (pré-carregada em preload()) com a ilustração
 // do mundo a que este nível pertence — null se o nível não tiver mundo
@@ -112,7 +91,11 @@ export function bgKeyForLevel(idx) {
 // o resto. Se um nível começar antes do seu fundo chegar, applyBackground() mostra
 // o céu desenhado e troca pela ilustração assim que ela chegar.
 
-export const BG_FILES = {}; // sem ilustrações de fundo: usa o céu desenhado com as paletas de THEMES
+export const BG_FILES = {
+  bg_origens: "mundo1.webp", bg_desenvolvimento: "mundo2.webp",
+  bg_protecao: "mundo3.webp", bg_participacao: "mundo4.webp",
+  bg_sala_secreta: "sala_secreta.webp"
+};
 
 export let _bootLevelIdx = 0;          // nível em que o Phaser arranca (definido antes de initPhaser)
 

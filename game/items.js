@@ -7,33 +7,33 @@
  * As variáveis de estado vivem em state.js; aqui alteram-se com set_<nome>().
  *************************************************/
 
-import { handleBossItemCollect, handleBossMalwareCollision } from "./boss-combat.js?v=20261108is20";
-import { vbSayRandom } from "./dialogue.js?v=20261108is20";
-import { hitFlash } from "./dom.js?v=20261108is20";
-import { applyHitStop, pickPraise, showFloat } from "./feedback.js?v=20261108is20";
-import { showGameOver } from "./flow.js?v=20261108is20";
-import { updateHearts } from "./level.js?v=20261108is20";
-import { saveGame } from "./overlays.js?v=20261108is20";
-import { snapPlayerToGround } from "./rooms.js?v=20261108is20";
-import { _critterSession, _overlayPaused, _starMelodyInterval, awaitingQuiz, collectedItemIndices, collectedRoomPipes, currentLevel, currentLevelTip, difficulty, doubleJumpActive, doubleJumpCountdown, doubleJumpTimer, getMaxLives, heartsGfx, inSecretRoom, invuln, invulnBlinkEvent, invulnEndEvent, isStarAllowedExtremo, itemCountText, itemsCollected, itemsGroup, itemsTotal, lives, livesLostThisLevel, pausedByTeacher, player, powerCountdown, powerIndicator, powered, poweredTimer, sceneRef, score, scoreText, secretRoomTemp, set__hudDirty, set__starMelodyInterval, set_awaitingQuiz, set_doubleJumpActive, set_doubleJumpCountdown, set_doubleJumpTimer, set_doubleJumpUsed, set_invuln, set_invulnBlinkEvent, set_invulnEndEvent, set_itemsCollected, set_lives, set_livesLostThisLevel, set_powerCountdown, set_powered, set_poweredTimer, set_score, set_starPower, set_starPowerCountVal, set_starPowerCountdown, set_starPowerTimer, starPower, starPowerCountVal, starPowerCountdown, starPowerTimer, tipText, touch } from "./state.js?v=20261108is20";
-import { globalStats, saveGlobalStats } from "./stats.js?v=20261108is20";
-import { triggerVanBertoHappy, triggerVanBertoSad } from "./vanberto.js?v=20261108is20";
-import { spawnShields } from "./world.js?v=20261108is20";
-import { onSecretRoomFoundForAchievements } from "../achievements.js?v=20261108is20";
-import { ensureAudio, SFX, beep } from "../audio.js?v=20261108is20";
-import { LEVELS } from "../data-levels.js?v=20261108is20";
-import { VB_HIT, VB_STAR_POWER } from "../data-flavor.js?v=20261108is20";
+import { handleBossItemCollect, handleBossMalwareCollision } from "./boss-combat.js?v=20261118dc1";
+import { vbSayRandom } from "./dialogue.js?v=20261118dc1";
+import { hitFlash } from "./dom.js?v=20261118dc1";
+import { applyHitStop, pickPraise, showFloat } from "./feedback.js?v=20261118dc1";
+import { showGameOver } from "./flow.js?v=20261118dc1";
+import { updateHearts } from "./level.js?v=20261118dc1";
+import { saveGame } from "./overlays.js?v=20261118dc1";
+import { snapPlayerToGround } from "./rooms.js?v=20261118dc1";
+import { _critterSession, _overlayPaused, _starMelodyInterval, awaitingQuiz, collectedItemIndices, collectedRoomPipes, currentLevel, currentLevelTip, difficulty, doubleJumpActive, doubleJumpCountdown, doubleJumpTimer, getMaxLives, heartsGfx, inSecretRoom, invuln, invulnBlinkEvent, invulnEndEvent, isStarAllowedExtremo, itemCountText, itemsCollected, itemsGroup, itemsTotal, lives, livesLostThisLevel, pausedByTeacher, player, powerCountdown, powerIndicator, powered, poweredTimer, sceneRef, score, scoreText, secretRoomTemp, set__hudDirty, set__starMelodyInterval, set_awaitingQuiz, set_doubleJumpActive, set_doubleJumpCountdown, set_doubleJumpTimer, set_doubleJumpUsed, set_invuln, set_invulnBlinkEvent, set_invulnEndEvent, set_itemsCollected, set_lives, set_livesLostThisLevel, set_powerCountdown, set_powered, set_poweredTimer, set_score, set_starPower, set_starPowerCountVal, set_starPowerCountdown, set_starPowerTimer, starPower, starPowerCountVal, starPowerCountdown, starPowerTimer, tipText, touch } from "./state.js?v=20261118dc1";
+import { globalStats, saveGlobalStats } from "./stats.js?v=20261118dc1";
+import { triggerVanBertoHappy, triggerVanBertoSad } from "./vanberto.js?v=20261118dc1";
+import { spawnShields } from "./world.js?v=20261118dc1";
+import { onSecretRoomFoundForAchievements } from "../achievements.js?v=20261118dc1";
+import { ensureAudio, SFX, beep } from "../audio.js?v=20261118dc1";
+import { LEVELS } from "../data-levels.js?v=20261118dc1";
+import { VB_HIT, VB_STAR_POWER } from "../data-flavor.js?v=20261118dc1";
 
 // ===== Itens =====
 
 const ITEM_LABELS={
   estrela:    {label:"⭐ STAR POWER! 8s",      color:"#ffd700"},
-  balao:      {label:"🔑 Chave de Acesso +10", color:"#e0209a"},
-  brinquedo:  {label:"🔐 Chip de Segurança +10", color:"#a050ff"},
+  balao:      {label:"🍭 Chupa-chupa +10", color:"#e0209a"},
+  brinquedo:  {label:"🧸 Brinquedo +10", color:"#a050ff"},
   medalha:    {label:"🛡️ Escudo! PROTEGIDO",  color:"#ffd700"},
   duplosalto: {label:"🦅 Duplo Salto! 10s",   color:"#80d0ff"},
   heart:      {label:"❤️ +1 Vida!",           color:"#e84d10"},
-  balaofesta: {label:"🔒 Cadeado Especial +10", color:"#1a90e0"}
+  balaofesta: {label:"🎈 Balão da Festa +10", color:"#1a90e0"}
 };
 
 // Cores das partículas por tipo de item
@@ -229,8 +229,8 @@ export function onHitMalware(playerObj, malwareObj){
   itemCountText.setText(`⭐ Itens: ${itemsCollected}/${itemsTotal}`);
   const keyMap={
     estrela:"item_estrela",
-    balao:"item_chave",
-    brinquedo:"item_chip",medalha:"item_medalha",heart:"item_heart",
+    balao:"item_chupachupa",
+    brinquedo:"item_brinquedo",medalha:"item_medalha",heart:"item_heart",
     duplosalto:"item_duplosalto"
   };
   let _starIdxRespawn2 = 0;

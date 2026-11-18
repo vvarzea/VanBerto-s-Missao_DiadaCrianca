@@ -7,21 +7,21 @@
  * As variáveis de estado vivem em state.js; aqui alteram-se com set_<nome>().
  *************************************************/
 
-import { damageBoss } from "./boss-combat.js?v=20261108is20";
-import { startBossFight } from "./boss-core.js?v=20261108is20";
-import { vbSayRandom } from "./dialogue.js?v=20261108is20";
-import { btnCloseQuiz, btnHistory, historyOverlay, historyText, quizAnswers, quizExplanation, quizFeedback, quizOverlay, quizQuestion, startOverlay } from "./dom.js?v=20261108is20";
-import { showDynamicMsg } from "./feedback.js?v=20261108is20";
-import { showVictoryScreen } from "./flow.js?v=20261108is20";
-import { openOverlay } from "./overlays.js?v=20261108is20";
-import { revealPlayerEntrance } from "./rooms.js?v=20261108is20";
-import { _vbTimer, bossState, currentLevel, getDifficulty, getMaxLives, getQuizPool, inBossFight, lives, mapProgress, pausedByTeacher, player, sceneRef, set__reviewReturnOverlay, set__vbTimer, set_awaitingQuiz, set_awaitingStory, set_invuln, set_lives } from "./state.js?v=20261108is20";
-import { QUIZ_ERRORS_MAX, globalStats, saveGlobalStats } from "./stats.js?v=20261108is20";
-import { QUIZ_BY_THEME, QUIZ_BY_THEME_AVANCADO, QUIZ_TIPS, QUIZ_ARTICLE, HISTORY } from "../data-quiz.js?v=20261108is20";
-import { ensureAudio, SFX } from "../audio.js?v=20261108is20";
-import { LEVELS } from "../data-levels.js?v=20261108is20";
-import { onHistoryReadForAchievements, onCorrectAnswerForAchievements, checkAchievements } from "../achievements.js?v=20261108is20";
-import { DYNAMIC_MSGS_CORRECT, VB_QUIZ_CORRECT, DYNAMIC_MSGS_WRONG, VB_QUIZ_WRONG } from "../data-flavor.js?v=20261108is20";
+import { damageBoss } from "./boss-combat.js?v=20261118dc1";
+import { startBossFight } from "./boss-core.js?v=20261118dc1";
+import { vbSayRandom } from "./dialogue.js?v=20261118dc1";
+import { btnCloseQuiz, btnHistory, historyOverlay, historyText, quizAnswers, quizExplanation, quizFeedback, quizOverlay, quizQuestion, startOverlay } from "./dom.js?v=20261118dc1";
+import { showDynamicMsg } from "./feedback.js?v=20261118dc1";
+import { showVictoryScreen } from "./flow.js?v=20261118dc1";
+import { openOverlay } from "./overlays.js?v=20261118dc1";
+import { revealPlayerEntrance } from "./rooms.js?v=20261118dc1";
+import { _vbTimer, bossState, currentLevel, getDifficulty, getMaxLives, getQuizPool, inBossFight, lives, mapProgress, pausedByTeacher, player, sceneRef, set__reviewReturnOverlay, set__vbTimer, set_awaitingQuiz, set_awaitingStory, set_invuln, set_lives } from "./state.js?v=20261118dc1";
+import { QUIZ_ERRORS_MAX, globalStats, saveGlobalStats } from "./stats.js?v=20261118dc1";
+import { QUIZ_BY_THEME, QUIZ_BY_THEME_AVANCADO, QUIZ_TIPS, QUIZ_ARTICLE, HISTORY } from "../data-quiz.js?v=20261118dc1";
+import { ensureAudio, SFX } from "../audio.js?v=20261118dc1";
+import { LEVELS } from "../data-levels.js?v=20261118dc1";
+import { onHistoryReadForAchievements, onCorrectAnswerForAchievements, checkAchievements } from "../achievements.js?v=20261118dc1";
+import { DYNAMIC_MSGS_CORRECT, VB_QUIZ_CORRECT, DYNAMIC_MSGS_WRONG, VB_QUIZ_WRONG } from "../data-flavor.js?v=20261118dc1";
 
 // ===== Quiz stats =====
 
