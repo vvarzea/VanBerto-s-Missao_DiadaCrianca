@@ -7,19 +7,19 @@
  * As variáveis de estado vivem em state.js; aqui alteram-se com set_<nome>().
  *************************************************/
 
-import { resetAllProgress } from "./artefacts.js?v=20261118dc2";
-import { startBossFight } from "./boss-core.js?v=20261118dc2";
-import { btnCloseHow, btnHow, btnMute, btnPause, btnStart, gameOverOverlay, playerNameInput, quizAnswers, quizOverlay, startOverlay, winOverlay } from "./dom.js?v=20261118dc2";
-import { playLevelTransition } from "./door.js?v=20261118dc2";
-import { loadLevel, updateHearts } from "./level.js?v=20261118dc2";
-import { renderMap } from "./map.js?v=20261118dc2";
-import { closeOverlay, openOverlay, saveGame } from "./overlays.js?v=20261118dc2";
-import { resetQuizStats, showHistory, usedQuizByLevel, usedQuizByTheme } from "./quiz.js?v=20261118dc2";
-import { showPauseScreen } from "./scene.js?v=20261118dc2";
-import { bossState, currentLevel, getStartLives, inBossFight, pausedByTeacher, powerHaloGfx, sceneRef, score, scoreText, setDifficulty, set__overlayPaused, set_awaitingQuiz, set_currentLevel, set_lives, set_livesLostThisLevel, set_pausedByTeacher, set_playerName, set_score, shadowGfx } from "./state.js?v=20261118dc2";
-import { flushScoreToStats } from "./stats.js?v=20261118dc2";
-import { toggleMuted, ensureAudio, SFX } from "../audio.js?v=20261118dc2";
-import { loadNamespace, saveNamespace } from "../storage.js?v=20261118dc2";
+import { resetAllProgress } from "./artefacts.js?v=20261118dc9";
+import { startBossFight } from "./boss-core.js?v=20261118dc9";
+import { btnCloseHow, btnHow, btnMute, btnPause, btnStart, gameOverOverlay, playerNameInput, quizAnswers, quizOverlay, startOverlay, winOverlay } from "./dom.js?v=20261118dc9";
+import { playLevelTransition } from "./door.js?v=20261118dc9";
+import { loadLevel, updateHearts } from "./level.js?v=20261118dc9";
+import { renderMap } from "./map.js?v=20261118dc9";
+import { closeOverlay, openOverlay, saveGame } from "./overlays.js?v=20261118dc9";
+import { resetQuizStats, showHistory, usedQuizByLevel, usedQuizByTheme } from "./quiz.js?v=20261118dc9";
+import { showPauseScreen } from "./scene.js?v=20261118dc9";
+import { bossState, currentLevel, getStartLives, inBossFight, pausedByTeacher, powerHaloGfx, sceneRef, score, scoreText, setDifficulty, set__overlayPaused, set_awaitingQuiz, set_currentLevel, set_lives, set_livesLostThisLevel, set_pausedByTeacher, set_playerName, set_score, shadowGfx } from "./state.js?v=20261118dc9";
+import { flushScoreToStats } from "./stats.js?v=20261118dc9";
+import { toggleMuted, ensureAudio, SFX } from "../audio.js?v=20261118dc9";
+import { loadNamespace, saveNamespace } from "../storage.js?v=20261118dc9";
 
 // Botão "Sair" no menu principal — fecha mesmo o jogo (diferente do
 // "Sair para o Menu" que existe durante o jogo, que só volta ao menu

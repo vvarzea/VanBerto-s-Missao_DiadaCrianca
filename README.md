@@ -8,5 +8,5 @@ Motor da Missão Internet Segura v14 (chaves, blocos «?», plataformas que caem
 - Perguntas: temas 4–11 com banco Fácil, Difícil e Extremo (data-quiz.js); os restantes temas usam o banco base nas 3 dificuldades.
 - Gravação: chave `vanbertos_dia_crianca_save_v1`.
 
-- Versão: v2 (carimbo 20261118dc2, igual no sw.js, no index.html e nos imports).
+- Versão: v9 (carimbo 20261118dc9, igual no sw.js, no index.html e nos imports).
 - Ao publicar uma nova versão, muda esse carimbo em todos os ficheiros para os telemóveis largarem a cache antiga.
