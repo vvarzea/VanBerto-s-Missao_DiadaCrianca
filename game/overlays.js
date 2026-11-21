@@ -7,11 +7,11 @@
  * As variáveis de estado vivem em state.js; aqui alteram-se com set_<nome>().
  *************************************************/
 
-import { historyOverlay, howOverlay, quizOverlay, startOverlay } from "./dom.js?v=20261118dc9";
-import { _doorAnimRunning, _historySubOpen, _starMelodyInterval, _winOverlaySubOpen, awaitingQuiz, awaitingStory, currentLevel, difficulty, pausedByTeacher, sceneRef, set__historySubOpen, set__overlayPaused, set__starMelodyInterval, set__winOverlaySubOpen, set_awaitingQuiz, set_awaitingStory, set_difficulty } from "./state.js?v=20261118dc9";
-import { updatePlayTime } from "./stats.js?v=20261118dc9";
-import { loadNamespace, saveNamespace } from "../storage.js?v=20261118dc9";
-import { isMuted, setMuted } from "../audio.js?v=20261118dc9";
+import { historyOverlay, howOverlay, quizOverlay, startOverlay } from "./dom.js?v=20261118dcc";
+import { _doorAnimRunning, _historySubOpen, _starMelodyInterval, _winOverlaySubOpen, awaitingQuiz, awaitingStory, currentLevel, difficulty, pausedByTeacher, sceneRef, set__historySubOpen, set__overlayPaused, set__starMelodyInterval, set__winOverlaySubOpen, set_awaitingQuiz, set_awaitingStory, set_difficulty } from "./state.js?v=20261118dcc";
+import { updatePlayTime } from "./stats.js?v=20261118dcc";
+import { loadNamespace, saveNamespace } from "../storage.js?v=20261118dcc";
+import { isMuted, setMuted } from "../audio.js?v=20261118dcc";
 
 // ===== Guardar =====
 // "settings" guarda apenas preferências (som, alto contraste) — nunca

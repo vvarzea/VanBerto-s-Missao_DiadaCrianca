@@ -7,21 +7,21 @@
  * As variáveis de estado vivem em state.js; aqui alteram-se com set_<nome>().
  *************************************************/
 
-import { clearMiniViruses, clearPopupHazard, clearToxicZones, currentContaminationZones, currentPopupConfig, doBossTeleport, showBossLaugh, spawnToxicZones, startPhishingDecoy, stopPhishingDecoy, triggerBossBlackout, updateToxicZones } from "./boss-attacks.js?v=20261118dc9";
-import { destroyBossHpBar, drawBossHpBar, enterBossPhase, startBossFinalStandBurst } from "./boss-core.js?v=20261118dc9";
-import { startBossQuizPhase } from "./boss-end.js?v=20261118dc9";
-import { vbSayRandom } from "./dialogue.js?v=20261118dc9";
-import { hitFlash } from "./dom.js?v=20261118dc9";
-import { applyHitStop, showFloat } from "./feedback.js?v=20261118dc9";
-import { showGameOver } from "./flow.js?v=20261118dc9";
-import { setInvuln } from "./items.js?v=20261118dc9";
-import { clearExtremoAllies, spawnExtremoReinforcement, updateHearts } from "./level.js?v=20261118dc9";
-import { snapPlayerToGround } from "./rooms.js?v=20261118dc9";
-import { awaitingQuiz, bossExtremoAllies, bossLockIcon, bossMiniViruses, bossOverlay, bossRageIcon, bossState, bossTimers, difficulty, heartsGfx, inBossFight, invuln, itemCountText, itemsGroup, lives, livesLostThisLevel, player, sceneRef, score, scoreText, set__hudDirty, set_awaitingQuiz, set_bossExtremoAllies, set_bossLockIcon, set_bossMiniViruses, set_bossOverlay, set_bossPopupAnchors, set_bossRageIcon, set_bossTimers, set_controlsInvertedUntil, set_invuln, set_lives, set_livesLostThisLevel, set_score, starPower, tipText } from "./state.js?v=20261118dc9";
-import { triggerVanBertoSad } from "./vanberto.js?v=20261118dc9";
-import { ensureAudio, beep, SFX } from "../audio.js?v=20261118dc9";
-import { BOSS_HP_TAUNTS } from "../data-story.js?v=20261118dc9";
-import { VB_STAR_POWER } from "../data-flavor.js?v=20261118dc9";
+import { clearMiniViruses, clearPopupHazard, clearToxicZones, currentContaminationZones, currentPopupConfig, doBossTeleport, showBossLaugh, spawnToxicZones, startPhishingDecoy, stopPhishingDecoy, triggerBossBlackout, updateToxicZones } from "./boss-attacks.js?v=20261118dcc";
+import { destroyBossHpBar, drawBossHpBar, enterBossPhase, startBossFinalStandBurst } from "./boss-core.js?v=20261118dcc";
+import { startBossQuizPhase } from "./boss-end.js?v=20261118dcc";
+import { vbSayRandom } from "./dialogue.js?v=20261118dcc";
+import { hitFlash } from "./dom.js?v=20261118dcc";
+import { applyHitStop, showFloat } from "./feedback.js?v=20261118dcc";
+import { showGameOver } from "./flow.js?v=20261118dcc";
+import { setInvuln } from "./items.js?v=20261118dcc";
+import { clearExtremoAllies, spawnExtremoReinforcement, updateHearts } from "./level.js?v=20261118dcc";
+import { snapPlayerToGround } from "./rooms.js?v=20261118dcc";
+import { awaitingQuiz, bossExtremoAllies, bossLockIcon, bossMiniViruses, bossOverlay, bossRageIcon, bossState, bossTimers, difficulty, heartsGfx, inBossFight, invuln, itemCountText, itemsGroup, lives, livesLostThisLevel, player, sceneRef, score, scoreText, set__hudDirty, set_awaitingQuiz, set_bossExtremoAllies, set_bossLockIcon, set_bossMiniViruses, set_bossOverlay, set_bossPopupAnchors, set_bossRageIcon, set_bossTimers, set_controlsInvertedUntil, set_invuln, set_lives, set_livesLostThisLevel, set_score, starPower, tipText } from "./state.js?v=20261118dcc";
+import { triggerVanBertoSad } from "./vanberto.js?v=20261118dcc";
+import { ensureAudio, beep, SFX } from "../audio.js?v=20261118dcc";
+import { BOSS_HP_TAUNTS } from "../data-story.js?v=20261118dcc";
+import { VB_STAR_POWER } from "../data-flavor.js?v=20261118dcc";
 
 // Reação exagerada tipo desenho animado sempre que QUALQUER boss é atingido:
 // achata-se por meio segundo (textura "_ouch" + squash) e volta ao normal,

@@ -7,20 +7,20 @@
  * As variáveis de estado vivem em state.js; aqui alteram-se com set_<nome>().
  *************************************************/
 
-import { hitFlash } from "./dom.js?v=20261118dc9";
-import { applyHitStop, showFloat } from "./feedback.js?v=20261118dc9";
-import { showGameOver } from "./flow.js?v=20261118dc9";
-import { clearPower, setInvuln } from "./items.js?v=20261118dc9";
-import { updateHearts } from "./level.js?v=20261118dc9";
-import { saveGame } from "./overlays.js?v=20261118dc9";
-import { snapPlayerToGround } from "./rooms.js?v=20261118dc9";
-import { _critterSession, _overlayPaused, awaitingQuiz, balloons, collectedItemIndices, collectedRoomPipes, critters, currentLevel, currentSign, decorativePipes, extraShieldCounted, getVillainSpeedMult, hazards, invuln, isStarAllowedExtremo, itemCountText, itemsCollected, itemsGroup, itemsTotal, lives, livesLostThisLevel, malwareGroup, movingPlatforms, pausedByTeacher, pipeHintSign, player, powered, sceneRef, secretDoors, secretSigns, set__critterSession, set__hudDirty, set_awaitingQuiz, set_balloons, set_critters, set_currentSign, set_extraShieldCounted, set_hazards, set_invuln, set_itemsCollected, set_itemsTotal, set_lives, set_livesLostThisLevel, set_movingPlatforms, set_pipeHintSign, set_secretDoors, set_secretSigns, set_trampolines, tipText, touch, trampolines } from "./state.js?v=20261118dc9";
-import { triggerVanBertoSad } from "./vanberto.js?v=20261118dc9";
-import { THEMES, LEVELS } from "../data-levels.js?v=20261118dc9";
-import { makePlatformTextureThemed } from "../textures.js?v=20261118dc9";
-import { ensureAudio, SFX, beep } from "../audio.js?v=20261118dc9";
-import { onSecretFoundForAchievements } from "../achievements.js?v=20261118dc9";
-import { NPC_SIGNS } from "../data-story.js?v=20261118dc9";
+import { hitFlash } from "./dom.js?v=20261118dcc";
+import { applyHitStop, showFloat } from "./feedback.js?v=20261118dcc";
+import { showGameOver } from "./flow.js?v=20261118dcc";
+import { clearPower, setInvuln } from "./items.js?v=20261118dcc";
+import { updateHearts } from "./level.js?v=20261118dcc";
+import { saveGame } from "./overlays.js?v=20261118dcc";
+import { snapPlayerToGround } from "./rooms.js?v=20261118dcc";
+import { _critterSession, _overlayPaused, awaitingQuiz, balloons, collectedItemIndices, collectedRoomPipes, critters, currentLevel, currentSign, decorativePipes, extraShieldCounted, getVillainSpeedMult, hazards, invuln, isStarAllowedExtremo, itemCountText, itemsCollected, itemsGroup, itemsTotal, lives, livesLostThisLevel, malwareGroup, movingPlatforms, pausedByTeacher, pipeHintSign, player, powered, sceneRef, secretDoors, secretSigns, set__critterSession, set__hudDirty, set_awaitingQuiz, set_balloons, set_critters, set_currentSign, set_extraShieldCounted, set_hazards, set_invuln, set_itemsCollected, set_itemsTotal, set_lives, set_livesLostThisLevel, set_movingPlatforms, set_pipeHintSign, set_secretDoors, set_secretSigns, set_trampolines, tipText, touch, trampolines } from "./state.js?v=20261118dcc";
+import { triggerVanBertoSad } from "./vanberto.js?v=20261118dcc";
+import { THEMES, LEVELS } from "../data-levels.js?v=20261118dcc";
+import { makePlatformTextureThemed } from "../textures.js?v=20261118dcc";
+import { ensureAudio, SFX, beep } from "../audio.js?v=20261118dcc";
+import { onSecretFoundForAchievements } from "../achievements.js?v=20261118dcc";
+import { NPC_SIGNS } from "../data-story.js?v=20261118dcc";
 
 // ===== Balões flutuantes apanháveis =====
 
@@ -62,10 +62,10 @@ export function spawnCritters(scene, worldW){
   const count = 3 + Math.floor(currentLevel / 2); // 3 no nível 1, até ~12 nos últimos
   const session = _critterSession;
   for(let i=0; i<count; i++){
-    // Alternar: metade são pacotes de dados, metade são drones
+    // Alternar: metade são borboletas, metade são abelhas
     const isDrone = (i % 2 === 0);
     const colorIdx = i % 5;
-    const key = isDrone ? "item_drone" : "item_pacote_"+colorIdx;
+    const key = isDrone ? "item_abelha" : "item_borboleta_"+colorIdx;
     const x = 120 + Math.random() * (worldW - 240);
     const y = 60 + Math.random() * 260;
     const sprite = scene.add.image(x, y, key)

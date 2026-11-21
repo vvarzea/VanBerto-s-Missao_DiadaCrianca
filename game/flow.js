@@ -7,24 +7,24 @@
  * As variáveis de estado vivem em state.js; aqui alteram-se com set_<nome>().
  *************************************************/
 
-import { collectedArtefacts, showArtefactGallery } from "./artefacts.js?v=20261118dc9";
-import { startBossFight } from "./boss-core.js?v=20261118dc9";
-import { bonusStars, btnCloseQuiz, quizOverlay } from "./dom.js?v=20261118dc9";
-import { clearDoubleJump, clearPower, clearStarPower } from "./items.js?v=20261118dc9";
-import { loadLevel } from "./level.js?v=20261118dc9";
-import { celebrateWorldComplete, enterLevelWithStory, isLastLevelOfRegion, regionForLevel, renderMap, renderWorldMap } from "./map.js?v=20261118dc9";
-import { closeOverlay, openOverlay, saveGame } from "./overlays.js?v=20261118dc9";
-import { quizStats, showHistory, wireReviewButton } from "./quiz.js?v=20261118dc9";
-import { openAchievementsScreen } from "./screens.js?v=20261118dc9";
-import { _doorWatchdogTimer, _landingCheckTimer, _reviewReturnOverlay, currentLevel, door, livesLostThisLevel, pausedByTeacher, player, playerName, powerHaloGfx, sceneRef, score, scoreText, set__doorWatchdogTimer, set__hudDirty, set__landingCheckTimer, set__reviewReturnOverlay, set__winOverlaySubOpen, set_awaitingQuiz, set_awaitingStory, set_livesLostThisLevel, set_score, shadowGfx, touch } from "./state.js?v=20261118dc9";
-import { adventureScore, globalStats, medalTextWin, medalTier } from "./stats.js?v=20261118dc9";
-import { btnWinRestart } from "./ui.js?v=20261118dc9";
-import { starsForLevel, totalStarsEarned, levelStars } from "../stars.js?v=20261118dc9";
-import { LEVELS } from "../data-levels.js?v=20261118dc9";
-import { BOSS_BY_LEVEL } from "../data-bosses.js?v=20261118dc9";
-import { ensureAudio, SFX } from "../audio.js?v=20261118dc9";
-import { hideDoorGlow } from "../background.js?v=20261118dc9";
-import { ARTEFACTS } from "../data-progression.js?v=20261118dc9";
+import { collectedArtefacts, showArtefactGallery } from "./artefacts.js?v=20261118dcc";
+import { startBossFight } from "./boss-core.js?v=20261118dcc";
+import { bonusStars, btnCloseQuiz, quizOverlay } from "./dom.js?v=20261118dcc";
+import { clearDoubleJump, clearPower, clearStarPower } from "./items.js?v=20261118dcc";
+import { loadLevel } from "./level.js?v=20261118dcc";
+import { celebrateWorldComplete, enterLevelWithStory, isLastLevelOfRegion, regionForLevel, renderMap, renderWorldMap } from "./map.js?v=20261118dcc";
+import { closeOverlay, openOverlay, saveGame } from "./overlays.js?v=20261118dcc";
+import { quizStats, showHistory, wireReviewButton } from "./quiz.js?v=20261118dcc";
+import { openAchievementsScreen } from "./screens.js?v=20261118dcc";
+import { _doorWatchdogTimer, _landingCheckTimer, _reviewReturnOverlay, currentLevel, door, livesLostThisLevel, pausedByTeacher, player, playerName, powerHaloGfx, sceneRef, score, scoreText, set__doorWatchdogTimer, set__hudDirty, set__landingCheckTimer, set__reviewReturnOverlay, set__winOverlaySubOpen, set_awaitingQuiz, set_awaitingStory, set_livesLostThisLevel, set_score, shadowGfx, touch } from "./state.js?v=20261118dcc";
+import { adventureScore, globalStats, medalTextWin, medalTier } from "./stats.js?v=20261118dcc";
+import { btnWinRestart } from "./ui.js?v=20261118dcc";
+import { starsForLevel, totalStarsEarned, levelStars } from "../stars.js?v=20261118dcc";
+import { LEVELS } from "../data-levels.js?v=20261118dcc";
+import { BOSS_BY_LEVEL } from "../data-bosses.js?v=20261118dcc";
+import { ensureAudio, SFX } from "../audio.js?v=20261118dcc";
+import { hideDoorGlow } from "../background.js?v=20261118dcc";
+import { ARTEFACTS } from "../data-progression.js?v=20261118dcc";
 
 // BUG CORRIGIDO: nextLevel() não tinha nenhuma proteção contra ser chamada
 // duas vezes seguidas para a MESMA conclusão de nível (ex.: o botão
@@ -155,7 +155,7 @@ export function showGameOver(){
 function startConfetti(durationMs=5000){
   const el=document.getElementById("confetti"); if(!el) return;
   el.classList.remove("hidden"); el.innerHTML="";
-  const emojis=["🎈","✨","⭐","🌟","🤖","🎁","🎊","🎉","🏆","🎀","🌈","💫","🥳","🎆","🎇","🪅","🏅","🎵","🎶","❤️","🌺","📦","🛸"];
+  const emojis=["🎈","✨","⭐","🌟","🧸","🎁","🎊","🎉","🏆","🎀","🌈","💫","🥳","🎆","🎇","🪅","🏅","🎵","🎶","❤️","🌺","📦","🛸"];
   const vw=Math.max(320,window.innerWidth||800);
   // Muito mais confetis na vitoria final
   const isMobile=window.matchMedia("(max-width:768px)").matches;
