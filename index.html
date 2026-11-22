@@ -1,830 +1,1739 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
 <head>
-  <meta charset="UTF-8" />
-  <!-- Content-Security-Policy: só código e ficheiros do próprio jogo, sem ligações a outros sites.
-       Os 2 scripts inline estão autorizados pelo hash (sha256): se editares o texto desses scripts, o hash muda e o
-       jogo deixa de arrancar — corre «node _dev/check.mjs», que o verifica e diz o valor novo. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-tq0er9YgMj5AkKnbnJ71mtSdWXq0f/aPoTRiW0I1sjM=' 'sha256-RuAraqiv2FYLC8N/puUYLXADGlp3wvWWcwLwcx2Vc4c='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self'; connect-src 'self' data: blob:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
-  <meta name="description" content="VanBerto's — O Dia da Criança: jogo educativo sobre os direitos das crianças." />
-  <meta name="theme-color" content="#35d7ff" />
-  <link rel="icon" type="image/x-icon" href="favicon.ico" />
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-  <link rel="manifest" href="manifest.json" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-title" content="VanBerto's" />
-  <title>VanBerto's — O Dia da Criança</title>
-  <link rel="stylesheet" href="dia-crianca.css?v=20261118dcc" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VanBerto's — Tetris</title>
+<meta name="theme-color" content="#241143">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tetris VanBerto's">
+<link rel="preload" href="fonts/nunito-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/fredoka-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+/* tipos de letra alojados no próprio jogo (sem pedidos à Google) */
+@font-face{font-family:'Nunito';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/nunito-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Nunito';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/nunito-latin-700-normal.woff2') format('woff2')}
+@font-face{font-family:'Nunito';font-style:normal;font-weight:800;font-display:swap;src:url('fonts/nunito-latin-800-normal.woff2') format('woff2')}
+@font-face{font-family:'Baloo 2';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/baloo-2-latin-700-normal.woff2') format('woff2')}
+@font-face{font-family:'Baloo 2';font-style:normal;font-weight:800;font-display:swap;src:url('fonts/baloo-2-latin-800-normal.woff2') format('woff2')}
+@font-face{font-family:'Fredoka One';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/fredoka-one-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Lexend';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/lexend-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Lexend';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/lexend-latin-600-normal.woff2') format('woff2')}
+:root{
+  --bg:#241143; --panel:#2a0a4e; --panel2:#1a0835; --panel3:#0f0525;
+  --magenta:#ec1e79; --gold:#ffa733; --peach:#ffb890; --pink:#FFB3D1;
+  --blue:#38bdf8; --green:#4ecb71; --shadow:#0a0520;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:'Nunito',system-ui,sans-serif;
+  background:#241143; color:var(--gold);
+  min-height:100vh; min-height:100dvh;
+  overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;
+  animation:festFlicker 8s ease-in-out infinite;
+}
+@keyframes festFlicker{
+  0%,100%{background:radial-gradient(ellipse 70% 55% at 50% 35%,rgba(236,30,121,.1) 0%,rgba(36,17,67,0) 55%,rgba(10,4,20,.95) 100%) #241143;}
+  33%{background:radial-gradient(ellipse 68% 53% at 51% 33%,rgba(255,200,50,.12) 0%,rgba(36,17,67,0) 55%,rgba(10,4,20,.94) 100%) #241143;}
+  66%{background:radial-gradient(ellipse 72% 58% at 49% 37%,rgba(56,189,248,.08) 0%,rgba(36,17,67,0) 55%,rgba(10,4,20,.94) 100%) #241143;}
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%,rgba(255,167,51,.6) 0%,transparent 100%),
+    radial-gradient(1px 1px at 30% 60%,rgba(255,255,255,.4) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 55% 15%,rgba(255,180,80,.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 70% 45%,rgba(255,255,255,.35) 0%,transparent 100%),
+    radial-gradient(1px 1px at 85% 25%,rgba(255,167,51,.4) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 20% 80%,rgba(255,107,157,.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 45% 70%,rgba(255,255,255,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 92% 70%,rgba(255,167,51,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 5% 50%,rgba(255,255,255,.3) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 62% 88%,rgba(56,189,248,.4) 0%,transparent 100%);
+}
+h1,h2,h3{font-family:'Fredoka One','Baloo 2',system-ui,sans-serif;font-weight:400;margin:0}
+button{font-family:'Baloo 2',sans-serif}
+.hidden{display:none!important}
+
+#app{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:12px;display:flex;flex-direction:column;gap:12px}
+
+/* ── cabeçalho ── */
+header{
+  background:linear-gradient(145deg,#2a0a4e 0%,#1a0835 60%,#0f0525 100%);
+  border:3px solid var(--magenta); border-radius:18px;
+  padding:10px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  box-shadow:0 0 0 2px var(--gold),5px 5px 0 rgba(0,0,0,.6),0 0 50px rgba(236,30,121,.28),inset 0 1px 0 rgba(255,200,100,.1);
+  position:relative; overflow:hidden;
+}
+header::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,167,51,.05),transparent);animation:sheen 4s ease-in-out infinite;pointer-events:none}
+@keyframes sheen{0%,100%{opacity:0;transform:translateX(-100%)}50%{opacity:1;transform:translateX(100%)}}
+.side-col{width:290px;max-width:100%;display:flex;flex-direction:column;gap:10px;align-self:stretch}
+.mascot{margin-top:auto;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px;pointer-events:none;animation:vbFloat 3.4s ease-in-out infinite;padding-left:6px}
+.mascot #vb{pointer-events:auto}
+@keyframes vbFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+#vb{width:88px;height:88px;filter:drop-shadow(0 0 12px #7dd3fc);cursor:pointer;flex-shrink:0}
+#vb.bounce{animation:vbPop .65s cubic-bezier(.34,1.56,.64,1)}
+@keyframes vbPop{0%,100%{transform:translateY(0) rotate(0)}30%{transform:translateY(-14px) rotate(-6deg)}70%{transform:translateY(-6px) rotate(5deg)}}
+.bubble{
+  background:linear-gradient(135deg,#2a0a4e,#1a0835);
+  border:2.5px solid var(--magenta); outline:1.5px solid rgba(255,167,51,.28); outline-offset:-3px;
+  border-radius:16px; padding:6px 12px; box-shadow:3px 3px 0 rgba(5,2,15,.8);
+  font-family:'Fredoka One','Baloo 2',system-ui,sans-serif; font-size:.8rem; color:#fff8e0;
+  min-width:96px; max-width:170px; text-align:center; position:relative;
+  opacity:0; transform:translateX(-6px) scale(.92);
+  transition:opacity .3s,transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.bubble::before{content:"";position:absolute;left:-11px;top:50%;transform:translateY(-50%);border-top:8px solid transparent;border-bottom:8px solid transparent;border-right:11px solid var(--magenta)}
+.bubble.show{opacity:1;transform:none}
+.hdr-text{flex:1 1 220px;position:relative;z-index:1}
+h1{font-size:clamp(1.5rem,5vw,2.2rem);letter-spacing:.02em;display:flex;align-items:baseline;gap:.35em;flex-wrap:wrap}
+.t-word{font-family:'Baloo 2',sans-serif;font-weight:800;color:#fff8e0;text-shadow:0 0 16px rgba(236,30,121,.55)}
+.brand{font-family:'Baloo 2','Fredoka One',sans-serif;font-weight:800;
+  background:linear-gradient(90deg,#ffa733 0%,#ff9a3c 40%,#ff6b9d 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 12px rgba(255,167,51,.45))}
+@keyframes titleGradient{0%{background-position:0% center}100%{background-position:200% center}}
+.sub{font-size:.82rem;color:var(--pink);font-style:italic;margin-top:2px}
+.sub strong{color:var(--gold);font-style:normal}
+#greet{font-family:'Fredoka One','Baloo 2',system-ui,sans-serif;font-size:.85rem;color:var(--gold);margin-top:2px}
+.hdr-btns{display:flex;gap:6px;position:relative;z-index:1}
+
+.btn{
+  font-family:'Baloo 2',sans-serif; font-weight:800; letter-spacing:.2px;
+  border:2.5px solid var(--magenta); border-radius:10px; padding:8px 14px; font-size:.82rem;
+  display:inline-flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;
+  background:linear-gradient(180deg,#3a0868,#25044a); color:var(--gold);
+  box-shadow:4px 4px 0 var(--shadow),inset 0 1px 0 rgba(255,180,80,.1);
+  transition:background .12s,transform .08s,box-shadow .08s; position:relative; overflow:hidden;
+  touch-action:manipulation;
+}
+.btn::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.06),transparent);pointer-events:none}
+.btn:hover{background:linear-gradient(180deg,#4e0e80,#32065e);transform:translate(-1px,-2px);box-shadow:5px 6px 0 var(--shadow),0 0 14px rgba(236,30,121,.3)}
+.btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--shadow)}
+.btn.secondary{background:linear-gradient(180deg,#ec1e79,#e04010);color:#fff8e0;border-color:var(--gold)}
+.btn.secondary:hover{background:linear-gradient(180deg,#ff8050,#e85020)}
+.btn.go{background:linear-gradient(180deg,#4ecb71,#00b894);color:#04210f;border-color:var(--gold)}
+.btn.small{font-size:.74rem;padding:5px 10px}
+.btn.wide{grid-column:1 / -1}
+
+/* ── ecrã de jogo ── */
+.screen{
+  background:linear-gradient(145deg,#2a0a4e,#1a0835,#0f0525);
+  border:3px solid var(--magenta); outline:2px solid var(--gold); outline-offset:-5px;
+  border-radius:18px; padding:14px;
+  box-shadow:0 0 0 2px var(--gold),6px 6px 0 var(--shadow),0 0 30px rgba(236,30,121,.15),inset 0 1px 0 rgba(255,200,100,.06);
+  display:flex; gap:20px; justify-content:center; align-items:stretch; flex-wrap:wrap;
+}
+.game-col{display:flex;flex-direction:column;align-items:center;gap:10px;width:min(100%,360px)}
+.frame{
+  position:relative; width:100%; padding:8px; border-radius:14px;
+  background:radial-gradient(circle at top,#3a1468,#0f0525 75%);
+  border:2.5px solid var(--edge,rgba(236,30,121,.6)); box-shadow:inset 0 2px 10px rgba(0,0,0,.5),0 0 26px var(--glow,rgba(236,30,121,.25));
+  transition:box-shadow .9s,border-color .9s;
+}
+#board{width:100%;height:auto;display:block;border-radius:8px;background:#08041a;touch-action:none;user-select:none;-webkit-user-select:none}
+#overlay{
+  position:absolute; inset:8px; border-radius:8px; background:rgba(10,4,25,.88);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:8px; padding:16px;
+  backdrop-filter:blur(2px);
+}
+#ovTitle{font-family:'Fredoka One','Baloo 2',system-ui,sans-serif;font-size:1.9rem;color:var(--gold);text-shadow:0 0 18px rgba(255,167,51,.45)}
+#ovText{color:var(--pink);font-size:.88rem;line-height:1.5}
+#ovBtn{margin-top:6px;font-size:1rem;padding:10px 22px}
+
+.pad{display:none;width:100%;grid-template-columns:repeat(6,1fr);gap:8px}
+.pad button{
+  padding:0;height:clamp(52px,13vw,62px); font-size:1.4rem; border-radius:14px; cursor:pointer; color:#fff8e0;
+  background:linear-gradient(180deg,#ff8040,#e04010); border:3px solid var(--gold);
+  box-shadow:0 5px 0 #7a1e04,0 0 14px rgba(236,30,121,.4); touch-action:manipulation;
+  transition:transform .08s,box-shadow .08s;
+}
+.pad button:active{transform:translateY(4px);box-shadow:0 1px 0 #7a1e04}
+.pad button.act2{background:linear-gradient(180deg,#38bdf8,#0b6fa8);box-shadow:0 5px 0 #063a5a,0 0 14px rgba(56,189,248,.4)}
+.pad button.act{background:linear-gradient(180deg,#7c3aed,#4c1d95);box-shadow:0 5px 0 #1e0a4e,0 0 14px rgba(162,155,254,.4)}
+@media (pointer:coarse){.pad{display:grid}}
+
+/* ── painel lateral ── */
+aside{
+  width:290px; max-width:100%;
+  background:linear-gradient(145deg,#2a0a4e,#241143);
+  border:3px solid var(--magenta); border-radius:18px; padding:12px;
+  box-shadow:0 0 0 1px var(--gold),4px 4px 0 var(--shadow);
+}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.side-title{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:.68rem;color:var(--gold);text-transform:uppercase;letter-spacing:.07em;margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid rgba(255,167,51,.25)}
+.cam-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.cam-row .btn{padding:6px 4px}
+.info{background:rgba(10,5,32,.7);border:1px solid rgba(236,30,121,.35);border-radius:12px;padding:10px;margin-top:10px}
+#next{display:block;margin:6px auto 0;background:#08041a;border-radius:10px;border:1px solid rgba(236,30,121,.4)}
+.stat{display:flex;justify-content:space-between;align-items:baseline;margin:5px 0;font-weight:700;color:var(--peach)}
+.stat strong{font-family:'Fredoka One','Baloo 2',system-ui,sans-serif;font-weight:400;font-size:1.1rem;color:var(--gold)}
+.pop{animation:statPop .35s ease}
+@keyframes statPop{50%{transform:scale(1.35);color:#ec1e79}}
+hr{border:none;border-top:1px solid rgba(236,30,121,.3);margin:8px 0}
+.hint{margin-top:8px;font-size:.74rem;color:var(--pink);line-height:1.5;font-style:italic}
+#app-footer{text-align:center;padding:8px 0 4px;font-family:'Fredoka One','Baloo 2',system-ui,sans-serif;font-size:.8rem;color:rgba(255,179,209,.85);letter-spacing:.5px;border-top:1px solid rgba(236,30,121,.12)}
+@media(max-width:560px){
+  #app{padding:8px} header{padding:8px 12px} #vb{width:68px;height:68px}
+  .bubble{font-size:.7rem;max-width:120px;min-width:80px}
+  .screen{padding:10px;gap:12px}
+}
+.mascot .bubble{transform:translateX(-6px) scale(.92)}.mascot .bubble.show{transform:none}
+.name-in{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.2rem;text-align:center;width:min(100%,240px);padding:10px 12px;border-radius:12px;border:3px solid var(--gold);background:#12062b;color:#fff8e0;outline:none}
+.name-in:focus{box-shadow:0 0 0 3px rgba(236,30,121,.5)}
+#greet{cursor:pointer}
+#quiz{position:absolute;inset:8px;border-radius:8px;background:rgba(10,4,25,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:14px;text-align:center;z-index:3}
+.q-tag{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:.72rem;color:var(--gold);text-transform:uppercase;letter-spacing:.06em}
+#qText{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:1.08rem;color:#fff8e0;line-height:1.3}
+#qOpts{display:flex;flex-direction:column;gap:8px;width:100%}
+#qOpts .btn.sel{outline:3px solid var(--gold);outline-offset:2px}
+#qHint,.kbhint{font-family:'Baloo 2',system-ui,sans-serif;font-weight:700;font-size:.74rem;color:var(--pink);opacity:.95}
+.kbhint{margin-top:2px}
+@media (pointer:coarse){ #qHint,.kbhint{display:none} }
+#qOpts .btn{width:100%;text-align:left;justify-content:flex-start;font-size:.9rem;padding:10px 12px;white-space:normal;line-height:1.25}
+#qOpts .btn.ok{background:linear-gradient(180deg,#4ecb71,#00b894);color:#04210f;border-color:var(--gold)}
+#qOpts .btn.bad{background:linear-gradient(180deg,#ff6b6b,#c0392b);color:#fff;border-color:#ffb3b3}
+#qFb{font-size:.84rem;color:var(--pink);line-height:1.4;min-height:2.4em}
+.help{text-align:left;font-size:.84rem;line-height:1.5;display:flex;flex-direction:column;gap:5px;margin-top:2px}
+@media (pointer:coarse){.pad{gap:10px}.pad button{height:clamp(62px,17vw,80px);font-size:1.8rem}}
+#hold{display:block;margin:6px auto 0;background:#08041a;border-radius:10px;border:1px solid rgba(236,30,121,.4)}
+.kbd{font-size:.62rem;border:1px solid rgba(255,167,51,.5);border-radius:5px;padding:0 5px;margin-left:4px;text-transform:none}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:.86rem;margin-top:4px;text-align:left;color:var(--peach);width:100%}
+.sum b{color:var(--gold);float:right}
+.medal{font-size:3.2rem;line-height:1;filter:drop-shadow(0 0 14px rgba(255,200,60,.7));animation:vbFloat 2.4s ease-in-out infinite}
+.medal-t{font-family:'Baloo 2',sans-serif;font-weight:800;color:#fff8e0;font-size:1.05rem}
+
+/* ── ajuste automático ao ecrã ── */
+html,body{min-height:100%}
+.game-col{width:calc(var(--bw,360px) + var(--chrome,22px));max-width:100%}
+.frame{width:100%}
+.pad button{height:clamp(40px,calc(var(--bw,300px) * .2),80px)!important;font-size:clamp(1.1rem,calc(var(--bw,300px) * .06),1.8rem)}
+@media (min-width:760px){ .screen{flex-wrap:nowrap;align-items:flex-start} }
+@media (max-height:520px){
+  #app{padding:6px;gap:6px} header{padding:4px 12px} #greet,.sub{display:none}
+  h1{font-size:1.15rem} #vb{width:56px;height:56px} .screen{padding:8px}
+}
+.small-board #quiz,.small-board #overlay{overflow:auto;padding:8px;gap:5px}
+.small-board #ovTitle{font-size:1.3rem} .small-board #ovText,.small-board #qFb{font-size:.72rem}
+.small-board #qText{font-size:.85rem} .small-board #qOpts .btn{font-size:.74rem;padding:6px 8px}
+#quiz,#overlay{overflow:auto}
+
+/* ── telemóvel (vertical): tudo num só ecrã, sem scroll ── */
+.mobile-only{display:none!important}
+#hud{display:none}
+@media (max-width:759px){
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  body{min-height:0}
+  #app{height:100vh;height:100dvh;padding:calc(6px + env(safe-area-inset-top)) calc(6px + env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));gap:6px}
+  header{flex-wrap:nowrap;gap:8px;padding:5px 8px;border-radius:16px;overflow:visible;z-index:5;flex:none}
+  header::after{display:none}
+  .hdr-text{flex:1 1 auto;min-width:0}
+  h1{font-size:clamp(1rem,4.7vw,1.25rem);flex-wrap:nowrap;white-space:nowrap;line-height:1.1}
+  #greet{font-size:.68rem;margin-top:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hdr-btns{gap:6px}
+  .hdr-btns .btn{width:38px;height:38px;padding:0;font-size:1.05rem;border-radius:11px;box-shadow:2px 3px 0 var(--shadow)}
+  .hdr-btns .lbl{display:none}
+  .mobile-only{display:inline-flex!important}
+
+  header .mascot{margin:0;padding:0;animation:none;position:relative;flex:none}
+  header #vb{width:46px;height:46px;margin:-4px 0}
+  header .mascot .bubble{position:absolute;top:50%;right:calc(100% + 12px);left:auto;z-index:30;width:max-content;max-width:min(210px,calc(100vw - 218px));transform:translateY(-50%) translateX(6px) scale(.92)}
+  header .mascot .bubble.show{transform:translateY(-50%)}
+  header .mascot .bubble::before{left:auto;right:-11px;top:50%;transform:translateY(-50%);border:8px solid transparent;border-right:0;border-left:11px solid var(--magenta)}
+
+  .screen{flex:1 1 auto;min-height:0;flex-direction:column;flex-wrap:nowrap;align-items:center;justify-content:flex-start;gap:6px;padding:6px;border-width:2px;border-radius:16px}
+  #hud{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px;width:100%;flex:none;background:rgba(10,5,32,.7);border:1px solid rgba(236,30,121,.35);border-radius:12px;padding:4px 6px}
+  .hud-box{position:relative;line-height:0}
+  .hud-box i{position:absolute;left:2px;top:0;font-style:normal;font-size:.6rem;line-height:1;opacity:.85}
+  #hudHold{width:50px;height:50px}
+  #hudNext{width:129px;height:43px}
+  #hudHold,#hudNext{background:#08041a;border-radius:8px;border:1px solid rgba(236,30,121,.4)}
+  .hud-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px 4px;text-align:center;min-width:0}
+  .hud-stats div{font-size:.62rem;line-height:1.15;color:var(--peach);font-weight:700;white-space:nowrap}
+  .hud-stats b{display:block;font-family:'Fredoka One','Baloo 2',system-ui,sans-serif;font-weight:400;font-size:1rem;color:var(--gold);line-height:1.1}
+
+  .game-col{gap:6px}
+  .frame{padding:5px;border-radius:12px}
+  #overlay,#quiz{inset:5px}
+  .pad{gap:7px}
+  .pad button{height:clamp(44px,calc(var(--bw,300px) * .17),64px)!important;border-width:2px;border-radius:12px;box-shadow:0 4px 0 #7a1e04,0 0 10px rgba(236,30,121,.4)}
+  #app-footer{flex:none;padding:2px 0 0;font-size:.68rem;border-top:0;line-height:1.2}
+
+  .side-col{display:none;position:fixed;inset:0;z-index:60;background:rgba(8,3,22,.92);align-items:center;justify-content:center;padding:16px;width:auto;max-width:none;overflow:auto}
+  body.menu-open .side-col{display:flex}
+  .side-col aside{width:min(100%,340px)}
+  aside .info{display:none}
+}
+/* ── mais satisfatório ── */
+.frame.pulse{animation:framePulse .65s ease-out}
+@keyframes framePulse{
+  0%{box-shadow:inset 0 2px 10px rgba(0,0,0,.5),0 0 90px 16px var(--pc,rgba(255,255,255,.85));border-color:#fff}
+  100%{box-shadow:inset 0 2px 10px rgba(0,0,0,.5),0 0 26px var(--glow,rgba(236,30,121,.25))}
+}
+#qOpts .btn.ok{animation:okPop .55s cubic-bezier(.34,1.56,.64,1)}
+#qOpts .btn.bad{animation:badShake .45s}
+@keyframes okPop{0%{transform:scale(.94)}50%{transform:scale(1.07)}100%{transform:scale(1)}}
+@keyframes badShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.q-law{margin-top:6px;padding:6px 10px;border-radius:10px;background:rgba(255,167,51,.12);border:1px solid rgba(255,167,51,.45);color:#ffe9c2;font-size:.78rem;line-height:1.35;text-align:left}
+.small-board .q-law{font-size:.66rem;padding:4px 8px}
+.qplus{position:absolute;left:50%;top:22%;font-family:'Fredoka One','Baloo 2',system-ui,sans-serif;font-size:2.3rem;color:#ffd93b;
+  text-shadow:0 0 18px rgba(255,217,59,.85),0 3px 0 #2a0a4e;pointer-events:none;z-index:5;white-space:nowrap;animation:qPlus 1.25s ease-out forwards}
+@keyframes qPlus{0%{opacity:0;transform:translate(-50%,10px) scale(.5)}20%{opacity:1;transform:translate(-50%,0) scale(1.25)}100%{opacity:0;transform:translate(-50%,-80px) scale(1)}}
+.qstar{position:absolute;left:50%;top:24%;pointer-events:none;font-size:1.4rem;z-index:4;animation:qStar .95s ease-out forwards}
+@keyframes qStar{0%{opacity:1;transform:translate(-50%,-50%) scale(.4)}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.3) rotate(240deg)}}
+@media (prefers-reduced-motion:reduce){.frame.pulse,.qstar{animation:none}}
+/* conteúdo centrado, mas sem ficar cortado em cima quando é maior do que a caixa (letra grande) */
+#quiz,#overlay{justify-content:flex-start!important}
+#quiz::before,#quiz::after,#overlay::before,#overlay::after{content:'';margin:auto}
+/* ── perguntas acessíveis ── */
+.sr-only{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+#a11yBar{order:-1;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;width:100%}
+#a11yBar .btn{font-size:.68rem;padding:4px 8px;box-shadow:2px 2px 0 var(--shadow)}
+#a11yBar .btn[aria-pressed="true"]{background:linear-gradient(180deg,#4ecb71,#00b894);color:#04210f;border-color:var(--gold)}
+#quiz :focus-visible,#overlay :focus-visible{outline:3px solid #ffe033;outline-offset:2px}
+#qText:focus{outline:none}
+#qOpts .btn{min-height:46px}
+#qOpts .btn.ok::before{content:'✔ ';font-weight:900}
+#qOpts .btn.bad::before{content:'✖ ';font-weight:900}
+body.a11y-big #qText{font-size:1.45rem}
+body.a11y-big #qOpts .btn{font-size:1.15rem;padding:12px 14px}
+body.a11y-big #qFb,body.a11y-big .q-law{font-size:1.02rem}
+body.a11y-big .q-tag,body.a11y-big #qHint{font-size:.9rem}
+body.a11y-big #a11yBar .btn{font-size:.82rem}
+body.a11y-contrast #quiz{background:#000}
+body.a11y-contrast #qText,body.a11y-contrast #qFb,body.a11y-contrast .q-tag{color:#fff}
+body.a11y-contrast #qHint{color:#ffe033}
+body.a11y-contrast #qOpts .btn{background:#000;color:#fff;border:3px solid #fff;box-shadow:none}
+body.a11y-contrast #qOpts .btn.ok{background:#006b1f;color:#fff}
+body.a11y-contrast #qOpts .btn.bad{background:#9b0000;color:#fff}
+body.a11y-contrast .q-law{background:#1a1200;border:2px solid #ffe033;color:#fff}
+body.a11y-contrast #a11yBar .btn{background:#000;color:#fff;border:2px solid #fff;box-shadow:none}
+body.a11y-contrast #a11yBar .btn[aria-pressed="true"]{background:#ffe033;color:#000}
+body.a11y-easy #quiz{font-family:'Lexend','Verdana','Arial',sans-serif}
+body.a11y-easy #quiz *{font-family:inherit!important;letter-spacing:.03em;line-height:1.6}
+
+/* ── festa no fim do jogo ── */
+#party{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6;border-radius:14px}
+.medal-wrap{position:relative;display:inline-block;padding:6px 14px}
+.medal-wrap.rays::before{content:'';position:absolute;inset:-52px;z-index:-1;border-radius:50%;
+  background:repeating-conic-gradient(rgba(255,214,64,.42) 0 9deg,transparent 9deg 18deg);
+  -webkit-mask:radial-gradient(circle,#000 18%,transparent 68%);mask:radial-gradient(circle,#000 18%,transparent 68%);
+  animation:raysSpin 14s linear infinite}
+@keyframes raysSpin{to{transform:rotate(360deg)}}
+.medal.party{animation:medalIn .95s cubic-bezier(.34,1.56,.64,1) both,vbFloat 2.4s ease-in-out .95s infinite}
+@keyframes medalIn{0%{transform:scale(0) rotate(-220deg);opacity:0}60%{transform:scale(1.55) rotate(14deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+#ovTitle.party{animation:titlePop .8s cubic-bezier(.34,1.56,.64,1)}
+@keyframes titlePop{0%{transform:scale(.3);opacity:0}100%{transform:scale(1);opacity:1}}
+.medal-t.party{animation:slideUp .5s .55s both}
+.sum.party>div{animation:slideUp .45s both}
+.sum.party>div:nth-child(1){animation-delay:.9s}.sum.party>div:nth-child(2){animation-delay:1.05s}
+.sum.party>div:nth-child(3){animation-delay:1.2s}.sum.party>div:nth-child(4){animation-delay:1.35s}
+.sum.party>div:nth-child(5){animation-delay:1.5s}.sum.party>div:nth-child(6){animation-delay:1.65s}
+@keyframes slideUp{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
+.rec{margin-top:4px;padding:4px 14px;border-radius:999px;color:#2a0a4e;font-weight:800;
+  background:linear-gradient(90deg,#ffd93b,#ff8a1f,#ffd93b);background-size:200% 100%;
+  animation:slideUp .5s 1.8s both,shimmer 1.6s linear infinite}
+.rec strong{color:#2a0a4e}
+@keyframes shimmer{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){
+  .medal.party,.medal-t.party,.sum.party>div,.rec,#ovTitle.party,.medal-wrap.rays::before{animation:none}
+}
+
+/* ── melhorias de leitura e toque ── */
+.lvbar{display:block;height:9px;border-radius:6px;background:#12062b;border:1.5px solid rgba(236,30,121,.6);overflow:hidden}
+.lvbar u{display:block;height:100%;width:0;border-radius:5px;background:linear-gradient(90deg,#ffa733,#ec1e79);transition:width .45s ease}
+aside .lvbar{margin:-1px 0 6px}
+.hud-stats .k{display:block;font-size:.56rem;font-weight:800;line-height:1.1;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud-stats .hud-lv .lvbar{margin-top:5px}
+.pad{grid-template-columns:1fr 1.45fr 1fr 1fr 1fr 1fr}
+.pad button svg{width:66%;max-width:40px;height:auto;aspect-ratio:1;fill:currentColor;pointer-events:none;display:block;margin:0 auto;filter:drop-shadow(0 1px 0 rgba(0,0,0,.35))}
+.pad button[data-a="rotate"]{background:linear-gradient(180deg,#a855f7,#6d28d9)}
+.hdr-btns .btn svg{display:block}
+
+/* ── computador: cabeçalho e painel mais compactos (cabe em 800 px de altura) ── */
+@media (min-width:760px){
+  header{padding:8px 18px}
+  h1{font-size:clamp(1.3rem,2.4vw,1.8rem)}
+  .sub{display:none}
+  #greet{margin-top:0}
+  .btns{gap:6px}
+  .btns .btn{padding:6px 10px}
+  #hold,#next{width:104px;height:auto}
+  .side-title{margin:8px 0 4px}
+  .stat{margin:3px 0}
+  .info{padding:8px;margin-top:8px}
+  .hint{margin-top:6px;font-size:.68rem;line-height:1.4}
+}
+
+/* ── computador: mascote no cabeçalho, reserva + próximas lado a lado, estatísticas em 2 colunas ── */
+@media (min-width:760px){
+  header .mascot{margin:0 8px 0 auto;padding:0;animation:none;position:relative;flex:none}
+  header #vb{width:56px;height:56px;margin:-6px 0}
+  header .mascot .bubble{position:absolute;top:50%;right:calc(100% + 12px);left:auto;z-index:30;width:max-content;max-width:260px;transform:translateY(-50%) translateX(6px) scale(.92)}
+  header .mascot .bubble.show{transform:translateY(-50%)}
+  header .mascot .bubble::before{left:auto;right:-11px;top:50%;transform:translateY(-50%);border:8px solid transparent;border-right:0;border-left:11px solid var(--magenta)}
+  .info{display:grid;grid-template-columns:1fr 1fr;column-gap:10px}
+  .info>.side-title:nth-child(1){grid-column:1;grid-row:1}
+  .info>#hold{grid-column:1;grid-row:2;width:100%;max-width:118px}
+  .info>.side-title:nth-child(3){grid-column:2;grid-row:1}
+  .info>#next{grid-column:2;grid-row:2;width:100%;max-width:118px}
+  .info>hr,.info>.hint,.info>.lvbar{grid-column:1/-1}
+  .info>.stat{grid-column:auto;font-size:.86rem}
+  .info>.stat:nth-of-type(n){min-width:0}
+  .info>.stat:has(#nextLevel),.info>.stat:has(#bestScore){grid-column:1/-1}
+}
+@media (min-width:760px) and (max-height:880px){ .hint{display:none} }
+
+/* telemóveis muito estreitos (≤ 340 px): HUD mais pequeno para as legendas não ficarem tapadas */
+@media (max-width:340px){
+  #hud{gap:4px}
+  #hudHold{width:40px;height:40px}
+  #hudNext{width:96px;height:32px}
+  .hud-stats .k{font-size:.5rem}
+  .hud-stats b{font-size:.9rem}
+}
+</style>
 </head>
 <body>
+<div id="app">
 
-  <!-- ═══════════════════════════════════════════
-       ERRO INESPERADO — rede de segurança
-       Registada o mais cedo possível (antes do Phaser e do resto do jogo), para apanhar também
-       falhas durante o carregamento. Ver a explicação e os testes em dia-crianca.js / _dev/smoke.py.
-  ═══════════════════════════════════════════ -->
-  <div id="fatalErrorOverlay" style="display:none;position:fixed;inset:0;z-index:99999;background: rgba(255,247,226,0.92);align-items:center;justify-content:center;padding:16px;font-family:'Baloo 2',sans-serif;">
-    <div style="max-width:420px;width:100%;background: #fff8e7;border: 3px solid #1e1b4b;border-radius:14px;padding:22px 24px;text-align:center;color: #1e1b4b;box-shadow: 0 0 40px rgba(30,27,75,0.20);">
-      <div style="font-size:40px;margin-bottom:6px;">😵</div>
-      <h2 style="margin:0 0 8px;color: #1e1b4b;font-size:20px;">Ups, algo correu mal!</h2>
-      <p style="margin:0 0 6px;font-size:14px;line-height:1.5;">Não é culpa tua — o jogo encontrou um problema inesperado.</p>
-      <p style="margin:0 0 16px;font-size:13px;line-height:1.5;opacity:0.85;">O teu progresso já está guardado neste dispositivo. Tenta recarregar; se acontecer sempre, pede a um adulto para avisar quem fez o jogo.</p>
-      <button id="btnFatalReload" style="font:inherit;font-weight:800;font-size:15px;padding:10px 22px;border-radius:10px;border: 2px solid #1e1b4b;background: linear-gradient(180deg,#d6f4ff,#d6f4ff);color: #1e1b4b;cursor:pointer;">🔄 Recarregar o jogo</button>
-      <p id="fatalErrorDetail" style="margin:14px 0 0;font-size:10px;opacity:0.5;word-break:break-word;"></p>
+  <header>
+    <div class="hdr-text">
+      <h1><span class="t-word">Tetris</span> <span class="brand">VanBerto's</span></h1>
+      <div id="greet"></div>
     </div>
-  </div>
-  <script>
-    (function () {
-      var shown = false;
-      function showFatal(message) {
-        if (shown) return; shown = true; // só a 1.ª vez — evita várias sobrepostas se houver mais do que um erro
-        var ov = document.getElementById("fatalErrorOverlay");
-        if (!ov) { console.error("[VanBerto's] erro fatal, sem overlay para o mostrar:", message); return; }
-        ov.style.display = "flex";
-        var detail = document.getElementById("fatalErrorDetail");
-        if (detail && message) detail.textContent = String(message).slice(0, 200);
-      }
-      window.addEventListener("error", function (e) { showFatal(e.message || e.error); });
-      window.addEventListener("unhandledrejection", function (e) { showFatal((e.reason && e.reason.message) || e.reason); });
-      document.getElementById("btnFatalReload").addEventListener("click", function () { location.reload(); });
-      // Gancho para os testes (_dev/smoke.py) simularem um erro real sem mexer no resto do jogo.
-      window.__vb_triggerFatalError = function () { setTimeout(function () { throw new Error("erro de teste"); }); };
-    })();
-  </script>
-
-  <div id="game"></div>
-
-  <!-- ═══════════════════════════════════════════
-       MENU PRINCIPAL
-  ═══════════════════════════════════════════ -->
-  <div id="startOverlay" class="overlay">
-    <div class="card">
-      <img class="start-robot" src="vanberto_real.png" alt="VanBerto's, o robô" width="96" height="96" />
-      <h1>VanBerto's — O Dia da Criança</h1>
-      <p class="sub"><strong>Professora:</strong> Vanda Várzea</p>
-      <p class="desc">
-        Ajuda o VanBerto's a recuperar os <strong>Direitos das Crianças</strong>,
-        espalhados por 4 mundos mágicos! Apanha itens pelo caminho e chega ao <strong>portal ✨</strong>
-        para responder à pergunta.<br>
-        Tens dúvidas? Clica em <strong>"Como Jogar ❓"</strong>!
-      </p>
-      <div class="name-row">
-        <label for="playerName">Olá! Como te chamas?</label>
-        <input type="text" id="playerName" maxlength="20" placeholder="Escreve (só neste dispositivo)" autocomplete="off" />
-      </div>
-
-      <!-- MENU PRINCIPAL — grelha de opções -->
-      <div class="main-menu-grid">
-        <button id="btnStart" class="btn primary menu-tile">🚀<span>Nova Aventura</span></button>
-        <button id="btnOpenMap" class="btn menu-tile">🗺️<span>Mapa</span></button>
-        <button id="btnAchievements" class="btn menu-tile">🏆<span>Conquistas</span></button>
-        <button id="btnAlbum" class="btn menu-tile">📖<span>Álbum dos Direitos</span></button>
-        <button id="btnStats" class="btn menu-tile">📊<span>Estatísticas</span></button>
-        <button id="btnOptions" class="btn menu-tile">⚙️<span>Opções</span></button>
-        <button id="btnHow" class="btn menu-tile">❓<span>Como Jogar</span></button>
-        <button id="btnExitGame" class="btn menu-tile">🚪<span>Sair</span></button>
-      </div>
-
-      <div class="row">
-        <button id="btnMute" class="btn">🔊 Som: ON</button>
-        <button id="btnTouchToggleStart" class="btn">📱 Botões: AUTO</button>
-        <button id="btnFullscreen" class="btn">⛶ Ecrã todo</button>
-      </div>
-      <p class="tiny">
-        <span class="hint-pc">PC: ← → para andar, ↑/Espaço para saltar e ↓/S para agachar.<br></span>
-        Tablet/telemóvel: mantém o dedo no lado esquerdo/direito para andar e faz um toque rápido para saltar.
-      </p>
-      <p class="tiny" id="versionTag" hidden aria-hidden="true" style="display:none !important;">Versão 20261118dcc</p>
+    <div class="hdr-btns">
+      <button class="btn small mobile-only" id="hMenu" title="Menu" aria-label="Menu">☰</button>
+      <button class="btn small mobile-only" id="hPause" title="Pausa" aria-label="Pausa"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg></button>
+      <button class="btn secondary small" id="soundBtn" title="Ligar/desligar o som" aria-label="Som">🔊<span class="lbl"> Som</span></button>
     </div>
-  </div>
+  </header>
 
-  <!-- ═══════════════════════════════════════════
-       NÍVEL DE DIFICULDADE — Fácil / Difícil
-       Pedido do Berto: o jogo era só para 1º/2º ciclo; este ano é preciso
-       também para 3º ciclo e secundário. Mostrado sempre que se clica em
-       "Nova Aventura" (ver btnStart em dia-crianca.js), antes de reiniciar
-       o progresso e abrir o mapa. Também pode ser mudado mais tarde em
-       Opções (optBtnDifficulty), sem ser preciso recomeçar tudo.
-  ═══════════════════════════════════════════ -->
-  <div id="difficultyOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Escolher nível de dificuldade">
-    <div class="card">
-      <h1>🎯 Escolhe o nível</h1>
-      <p class="desc">Isto ajusta as perguntas do quiz e o desafio dos vilões/chefes.</p>
-      <div class="difficulty-options">
-        <button id="btnDiffFacil" class="btn difficulty-tile diff-facil">😊<span>Fácil</span></button>
-        <button id="btnDiffDificil" class="btn difficulty-tile diff-dificil">🎓<span>Difícil</span></button>
-        <button id="btnDiffExtremo" class="btn difficulty-tile diff-extremo">🔥<span>Extremo</span></button>
+  <div class="screen">
+    <div id="hud" aria-hidden="true">
+      <div class="hud-box"><i>📦</i><canvas id="hudHold" width="100" height="100"></canvas></div>
+      <div class="hud-stats">
+        <div><span class="k">Pontos</span><b id="hScore">0</b></div><div><span class="k">Nível</span><b id="hLevel">1</b></div><div><span class="k">Linhas</span><b id="hLines">0</b></div>
+        <div><span class="k">Combo</span><b id="hCombo">0</b></div><div><span class="k">Recorde</span><b id="hBest">0</b></div><div class="hud-lv"><span class="k">Próximo</span><i class="lvbar"><u id="hBar"></u></i><b id="hNext" class="sr-only">0</b></div>
       </div>
-      <p class="tiny">😊 Fácil — ritmo habitual.<br>🎓 Difícil — vilões/chefes mais rápidos e menos vidas.<br>🔥 Extremo — só 1 vida, vilões/chefes ainda mais rápidos, quase sem Star Power.</p>
+      <div class="hud-box"><i>🔮</i><canvas id="hudNext" width="300" height="100"></canvas></div>
     </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════
-       HISTÓRIA PRINCIPAL — introdução narrativa
-  ═══════════════════════════════════════════ -->
-  <div id="mainStoryOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="História principal">
-    <div class="card history-card main-story-card">
-      <div class="main-story-robot">
-        <img src="vanberto_real.png" alt="VanBerto's" class="main-story-robot-img" />
-        <div class="main-story-particles" aria-hidden="true"></div>
+    <div class="game-col">
+      <div class="frame">
+        <canvas id="board"></canvas>
+        <div id="overlay">
+          <div id="ovTitle">TETRIS</div>
+          <div id="ovText">Completa linhas para ganhar pontos!<br>Toca no ecrã, usa os botões ou o teclado.</div>
+          <input id="nameIn" class="name-in hidden" type="text" maxlength="16" placeholder="O teu nome" autocomplete="off" aria-label="O teu nome">
+          <button class="btn go" id="ovBtn">▶ COMEÇAR</button>
+          <div class="kbhint">⌨️ Enter</div>
+        </div>
+        <div id="quiz" class="hidden" role="dialog" aria-modal="true" aria-labelledby="qText">
+          <div class="q-tag" id="qTag">🧠 Pergunta VanBerto's · +100 pontos</div>
+          <div id="qText" tabindex="-1"></div>
+          <div id="qOpts"></div>
+          <div id="qHint"></div>
+          <div id="qFb" role="status" aria-live="polite"></div>
+          <button class="btn go hidden" id="qNext">Continuar ▶</button>
+          <div id="a11yBar" role="group" aria-label="Acessibilidade das perguntas">
+            <button type="button" class="btn small" id="aListen">🔊 Ouvir</button>
+            <button type="button" class="btn small" id="aAuto" aria-pressed="false">🗣️ Ler sempre</button>
+            <button type="button" class="btn small" id="aBig" aria-pressed="false">🔠 Letra grande</button>
+            <button type="button" class="btn small" id="aContrast" aria-pressed="false">◐ Contraste</button>
+            <button type="button" class="btn small" id="aEasy" aria-pressed="false">Aa Letra clara</button>
+          </div>
+        </div>
+        <canvas id="party" aria-hidden="true"></canvas>
+        <div id="srStatus" class="sr-only" role="status" aria-live="polite"></div>
       </div>
-      <div class="history-header">
-        <span class="history-icon">🌟</span>
-        <div>
-          <h2>VanBerto's precisa de ajuda!</h2>
-          <p class="history-subtitle">A missão começa agora</p>
+      <div class="pad" id="pad">
+        <button data-a="left" aria-label="Esquerda"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 4.5 6.5 12l9 7.5z"/></svg></button>
+        <button data-a="rotate" class="act" aria-label="Rodar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.2 12a7.2 7.2 0 1 1-2.3-5.3" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path d="M20.6 2.8v7.6h-7.6z"/></svg></button>
+        <button data-a="right" aria-label="Direita"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 4.5 17.5 12l-9 7.5z"/></svg></button>
+        <button data-a="down" aria-label="Descer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 8.5h15L12 17.5z"/></svg></button>
+        <button data-a="hard" class="act" aria-label="Queda direta"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="10.4" y="2.5" width="3.2" height="9" rx="1.4"/><path d="M5.5 10.5h13L12 18z"/><rect x="4.5" y="20" width="15" height="3" rx="1.5"/></svg></button>
+        <button data-a="hold" class="act2" aria-label="Guardar peça">📦</button>
+      </div>
+    </div>
+
+    <div class="side-col">
+    <aside>
+      <div class="btns">
+        <button class="btn go wide" id="startBtn">▶ COMEÇAR</button>
+        <button class="btn" id="pauseBtn">⏸ PAUSA</button>
+        <button class="btn secondary" id="resetBtn">⟳ REINICIAR</button>
+        <button class="btn" id="ghostBtn">👻 SOMBRA</button>
+        <button class="btn" id="diffBtn">⚡ NORMAL</button>
+        <button class="btn" id="modeBtn">🎮 CLÁSSICO</button>
+        <button class="btn" id="quizBtn">🧠 PERGUNTAS</button>
+        <button class="btn" id="helpBtn">❓ AJUDA</button>
+        <button class="btn secondary wide mobile-only" id="menuClose">✖ FECHAR</button>
+      </div>
+
+      <div class="info">
+        <div class="side-title" style="margin-top:0">📦 Reserva <span class="kbd">C</span></div>
+        <canvas id="hold" width="150" height="64"></canvas>
+        <div class="side-title">🔮 Próximas peças</div>
+        <canvas id="next" width="150" height="150"></canvas>
+        <hr>
+        <div class="stat">⭐ Pontos <strong id="score">0</strong></div>
+        <div class="stat">🧩 Nível <strong id="level">1</strong></div>
+        <div class="stat">📏 Linhas <strong id="lines">0</strong></div>
+        <div class="stat">🔥 Combo <strong id="combo">0</strong></div>
+        <div class="stat">➡️ Próximo nível <strong id="nextLevel">1000</strong></div>
+        <div class="lvbar" aria-hidden="true"><u id="sBar"></u></div>
+        <hr>
+        <div class="stat">🏆 Recorde <strong id="bestScore">0</strong></div>
+        <div class="hint">
+          <b>Toque:</b> topo roda • lados movem • centro desce • duplo toque cai<br>
+          <b>Teclas:</b> ← → mover • ↑ rodar • ↓ descer • Espaço queda • P pausa
         </div>
       </div>
-      <p class="history-text">Olá! Eu sou o VanBerto's! Algo terrível aconteceu! Os Direitos das Crianças desapareceram do mundo e foram espalhados por 4 mundos mágicos. Preciso da tua ajuda para recuperar cada direito e devolvê-lo a todas as crianças!</p>
-      <div class="row">
-        <button id="btnMainStoryContinue" class="btn primary">Vamos lá! 🗺️ ▶</button>
-      </div>
+    </aside>
+    <div class="mascot" id="mascot">
+    <canvas id="vb" width="96" height="96" role="button" tabindex="0" aria-label="Robô VanBerto's — clica para falar"></canvas>
+    <div class="bubble" id="bubble">Olá! 😊</div>
+  </div>
+
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════
-       MAPA DA AVENTURA
-  ═══════════════════════════════════════════ -->
-  <div id="mapOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Mapa da Aventura">
-    <div class="card map-card">
-      <div class="card-seal" aria-hidden="true">🗺️</div>
-      <h2>🗺️ Mapa da Aventura</h2>
-      <p class="map-progress-line">
-        <span id="mapProgressPct">0%</span> concluído ·
-        <span id="mapStarsTotal">0</span> ⭐ obtidas
-      </p>
-      <div class="map-progress-track"><div id="mapProgressFill" class="map-progress-fill"></div></div>
+  <div id="app-footer">© Prof.ª Vanda Várzea</div>
+</div>
 
-      <div id="mapRegionsGrid" class="map-regions-grid"><!-- preenchido via JS --></div>
+<script>
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
 
-      <p class="tiny map-hint">💡 Toca numa região desbloqueada para começar esse troço da aventura.</p>
-      <div class="row">
-        <button id="btnCloseMap" class="btn primary">Fechar</button>
-        <button id="btnMapMenu" class="btn">🏠 Menu principal</button>
-        <button id="btnMapExit" class="btn">🚪 Sair do jogo</button>
-      </div>
-    </div>
-  </div>
+/* ═══════════════ VANBERTO'S (mesmo desenho do jogo de programação) ═══════════════ */
+function rrVan(ctx,x,y,w,h,r){
+  const rr=Math.min(r,w/2,h/2);
+  ctx.beginPath();ctx.moveTo(x+rr,y);ctx.arcTo(x+w,y,x+w,y+h,rr);ctx.arcTo(x+w,y+h,x,y+h,rr);ctx.arcTo(x,y+h,x,y,rr);ctx.arcTo(x,y,x+w,y,rr);ctx.closePath();
+}
+function cfVan(ctx,x,y,r,color){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();}
 
-  <div id="worldMapOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Mapa do Mundo">
-    <div class="world-map-panel" id="worldMapPanel">
-      <button type="button" id="btnBackToMap" class="world-map-back" aria-label="Voltar ao mapa">← Mundos</button>
-      <div class="world-map-title">
-        <div class="world-map-icon" id="worldMapIcon" aria-hidden="true"></div>
-        <div class="world-map-text">
-          <h2 id="worldMapName"></h2>
-          <p id="worldMapSub"></p>
-        </div>
-      </div>
-      <div class="world-map-progress" id="worldMapProgress"></div>
-      <div id="worldMapNodes" class="world-map-nodes"><!-- preenchido via JS --></div>
-    </div>
-  </div>
+function drawVanBerto(ctx,blink,step,armsUp){
+  const w=96,h=96;
+  ctx.clearRect(0,0,w,h);
+  ctx.lineJoin="round"; ctx.lineCap="round";
+  ctx.save(); ctx.translate(0,6);
+  const NAVY="#16233e", NAVY2="#26365a", OUT="#101a30";
+  function white(x0,y0,x1,y1){const g=ctx.createLinearGradient(x0,y0,x1,y1);g.addColorStop(0,"#ffffff");g.addColorStop(0.55,"#e6edf7");g.addColorStop(1,"#b4c4dc");return g;}
 
-  <!-- ═══════════════════════════════════════════
-       CONQUISTAS
-  ═══════════════════════════════════════════ -->
-  <div id="achievementsOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Conquistas">
-    <div class="card achievements-card">
-      <div class="card-seal" aria-hidden="true">🏆</div>
-      <h2>🏆 Conquistas</h2>
-      <p class="map-progress-line">
-        Desbloqueadas: <span id="achievementsCounter" style="color: #1e1b4b;">0/7</span>
-      </p>
-      <div id="achievementsGrid" class="achievements-grid"><!-- preenchido via JS --></div>
-      <div class="row">
-        <button id="btnCloseAchievements" class="btn primary">Fechar</button>
-      </div>
-    </div>
-  </div>
+  const LIFT=8, STRIDE=3;
+  let lTop=70, rTop=70, lDX=0, rDX=0;
+  if(step===0){ lTop=70-LIFT; lDX=STRIDE; rDX=-STRIDE; }
+  else if(step===1){ rTop=70-LIFT; rDX=STRIDE; lDX=-STRIDE; }
+  function leg(cx,top){
+    rrVan(ctx,cx-5,top,10,11,4.5); ctx.fillStyle=white(cx-5,top,cx+5,top); ctx.fill();
+    ctx.lineWidth=2.6; ctx.strokeStyle=OUT; ctx.stroke();
+    const fy=top+9;
+    rrVan(ctx,cx-6.5,fy,13,9,4); ctx.fillStyle=NAVY; ctx.fill();
+    ctx.lineWidth=2.6; ctx.strokeStyle=OUT; ctx.stroke();
+    rrVan(ctx,cx-6.5,fy+2,13,2.4,1.2); ctx.fillStyle="rgba(255,255,255,0.85)"; ctx.fill();
+    cfVan(ctx,cx-2.5,fy+4.5,1.4,"rgba(255,255,255,0.5)");
+  }
+  leg(41+lDX,lTop); leg(55+rDX,rTop);
 
-  <!-- ═══════════════════════════════════════════
-       ÁLBUM DOS DIREITOS
-  ═══════════════════════════════════════════ -->
-  <div id="albumOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Álbum dos Direitos">
-    <div class="card album-card-outer">
-      <div class="card-seal" aria-hidden="true">📖</div>
-      <h2>📖 Álbum dos Direitos</h2>
-      <p class="map-progress-line">
-        Coleção: <span id="albumProgressPct" style="color: #1e1b4b;">0%</span> concluída
-      </p>
-      <div class="map-progress-track"><div id="albumProgressFill" class="map-progress-fill"></div></div>
-      <div id="albumGrid" class="album-grid"><!-- preenchido via JS --></div>
-      <div class="row">
-        <button id="btnCloseAlbum" class="btn primary">Fechar</button>
-      </div>
-    </div>
-  </div>
+  const ARM_SWING = 0.24;
+  const JUMP_RAISE = 2.9;
+  let lArmSwing = 0, rArmSwing = 0;
+  if(armsUp){ lArmSwing = JUMP_RAISE; rArmSwing = -JUMP_RAISE; }
+  else if(step===0){ lArmSwing=-ARM_SWING; rArmSwing=ARM_SWING; }
+  else if(step===1){ lArmSwing=ARM_SWING; rArmSwing=-ARM_SWING; }
+  function arm(sx,swing){
+    ctx.save();
+    const px=sx+4.5, py=52;
+    ctx.translate(px,py); ctx.rotate(swing); ctx.translate(-px,-py);
+    rrVan(ctx,sx,52,9,13,4.5); ctx.fillStyle=white(sx,52,sx+9,52); ctx.fill();
+    ctx.lineWidth=2.6; ctx.strokeStyle=OUT; ctx.stroke();
+    const hx=sx+4.5, hy=67;
+    cfVan(ctx,hx,hy,5,NAVY);
+    ctx.lineWidth=2.3; ctx.strokeStyle=OUT; ctx.beginPath(); ctx.arc(hx,hy,5,0,Math.PI*2); ctx.stroke();
+    cfVan(ctx,hx-2,hy+1.6,1.4,NAVY2); cfVan(ctx,hx+0.5,hy+2.4,1.4,NAVY2); cfVan(ctx,hx+2.5,hy+1.6,1.4,NAVY2);
+    ctx.restore();
+  }
+  arm(17,lArmSwing); arm(70,rArmSwing);
 
-  <!-- ═══════════════════════════════════════════
-       ESTATÍSTICAS
-  ═══════════════════════════════════════════ -->
-  <div id="statsOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Estatísticas">
-    <div class="card stats-card">
-      <div class="card-seal" aria-hidden="true">📊</div>
-      <h2>📊 As Tuas Estatísticas</h2>
-      <div id="statsContent" class="stats-content" tabindex="0" role="region" aria-label="Lista de estatísticas"><!-- preenchido via JS --></div>
-      <p class="stats-note">🔒 O teu nome e o teu progresso ficam só neste dispositivo. «Limpar tudo» apaga-os.</p>
-      <div class="row">
-        <button id="btnCloseStats" class="btn primary">Fechar</button>
-        <button id="btnResetStats" class="btn stats-reset-btn">🗑️ Limpar tudo</button>
-      </div>
-    </div>
-  </div>
+  rrVan(ctx,26,44,44,32,15); ctx.fillStyle=white(28,46,68,46); ctx.fill();
+  ctx.save(); rrVan(ctx,26,44,44,32,15); ctx.clip();
+  const wg=ctx.createLinearGradient(0,64,0,76); wg.addColorStop(0,"rgba(22,35,62,0)"); wg.addColorStop(0.4,"#1c2c4c"); wg.addColorStop(1,"#142038");
+  ctx.fillStyle=wg; ctx.fillRect(26,62,44,16);
+  ctx.strokeStyle="rgba(16,26,48,0.6)"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(28,64); ctx.lineTo(68,64); ctx.stroke();
+  ctx.fillStyle="rgba(255,255,255,0.5)"; ctx.beginPath(); ctx.ellipse(36,52,9,5.5,-0.5,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  ctx.lineWidth=3; ctx.strokeStyle=OUT; rrVan(ctx,26,44,44,32,15); ctx.stroke();
 
-  <!-- ═══════════════════════════════════════════
-       OPÇÕES
-  ═══════════════════════════════════════════ -->
-  <div id="optionsOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Opções">
-    <div class="card options-card">
-      <div class="card-seal" aria-hidden="true">⚙️</div>
-      <h2>⚙️ Opções</h2>
+  cfVan(ctx,48,56,8,NAVY);
+  ctx.lineWidth=2.5; ctx.strokeStyle=OUT; ctx.beginPath(); ctx.arc(48,56,8,0,Math.PI*2); ctx.stroke();
+  const dome=ctx.createRadialGradient(45.5,53.5,1,48,56,7); dome.addColorStop(0,"#aebccf"); dome.addColorStop(0.6,"#5a6a85"); dome.addColorStop(1,"#2b3a57");
+  ctx.fillStyle=dome; ctx.beginPath(); ctx.arc(48,56,5.7,0,Math.PI*2); ctx.fill();
+  cfVan(ctx,46,53.8,1.5,"rgba(255,255,255,0.85)");
 
-      <div id="optionsScroll" class="options-scroll" tabindex="0" role="region" aria-label="Lista de opções">
-      <div class="options-section">
-        <p class="options-section-title">🔊 Áudio</p>
-        <label class="options-toggle-row">
-          <span>Som do jogo</span>
-          <button id="optBtnSound" class="option-toggle-btn">🔊 ON</button>
-        </label>
-      </div>
+  function pod(cx){
+    cfVan(ctx,cx,32,6,NAVY);
+    ctx.lineWidth=2.3; ctx.strokeStyle=OUT; ctx.beginPath(); ctx.arc(cx,32,6,0,Math.PI*2); ctx.stroke();
+    cfVan(ctx,cx,32,2.8,NAVY2); cfVan(ctx,cx-0.8,31,1,"rgba(255,255,255,0.6)");
+  }
+  pod(25); pod(71);
 
-      <div class="options-section">
-        <p class="options-section-title">🎯 Dificuldade</p>
-        <label class="options-toggle-row">
-          <span>Nível (perguntas do quiz e desafio de vilões/chefes)</span>
-          <button id="optBtnDifficulty" class="option-toggle-btn">😊 Fácil</button>
-        </label>
-        <p class="tiny">Só faz efeito a partir do próximo nível/combate — não interrompe o que já estás a jogar.</p>
-      </div>
+  ctx.fillStyle=NAVY; ctx.beginPath(); ctx.moveTo(45,16); ctx.lineTo(51,16); ctx.lineTo(49.2,8); ctx.lineTo(46.8,8); ctx.closePath(); ctx.fill();
+  const halo=ctx.createRadialGradient(48,5,1,48,5,11); halo.addColorStop(0,"rgba(90,200,255,0.55)"); halo.addColorStop(1,"rgba(90,200,255,0)");
+  ctx.fillStyle=halo; ctx.beginPath(); ctx.arc(48,5,11,0,Math.PI*2); ctx.fill();
+  const bg=ctx.createRadialGradient(46.3,3.5,0.5,48,5,5.5); bg.addColorStop(0,"#e6f7ff"); bg.addColorStop(0.4,"#48b4ff"); bg.addColorStop(1,"#1670d8");
+  ctx.fillStyle=bg; ctx.beginPath(); ctx.arc(48,5,5.5,0,Math.PI*2); ctx.fill();
+  cfVan(ctx,46.2,3.4,1.6,"#ffffff");
 
-      <div class="options-section">
-        <p class="options-section-title">♿ Acessibilidade</p>
-        <label class="options-toggle-row">
-          <span>Alto Contraste (também tecla <kbd>H</kbd>)</span>
-          <button id="optBtnHC" class="option-toggle-btn">⬛ OFF</button>
-        </label>
-        <label class="options-toggle-row">
-          <span>Botões tácteis (móvel)</span>
-          <button id="optBtnTouch" class="option-toggle-btn">📱 AUTO</button>
-        </label>
-      </div>
+  rrVan(ctx,26,14,44,34,17); ctx.fillStyle=white(28,15,68,15); ctx.fill();
+  ctx.lineWidth=3; ctx.strokeStyle=OUT; ctx.stroke();
+  ctx.save(); rrVan(ctx,26,14,44,34,17); ctx.clip();
+  ctx.fillStyle="rgba(255,255,255,0.6)"; ctx.beginPath(); ctx.ellipse(38,19,10,4,-0.5,0,Math.PI*2); ctx.fill(); ctx.restore();
 
-      <div class="options-section" id="optionsOfflineSection" style="display:none">
-        <p class="options-section-title">📶 Jogar sem rede</p>
-        <label class="options-toggle-row">
-          <span>Guarda o jogo neste aparelho, para funcionar sem internet</span>
-          <button id="optBtnDownloadAll" class="option-toggle-btn">⬇️ Guardar tudo</button>
-        </label>
-        <p class="tiny" id="offlineDownloadStatus"></p>
-      </div>
+  rrVan(ctx,30,20,36,23,12); ctx.fillStyle=NAVY; ctx.fill();
+  rrVan(ctx,32.5,22,31,19,10);
+  const vg=ctx.createLinearGradient(0,22,0,41); vg.addColorStop(0,"#7fd4ff"); vg.addColorStop(0.5,"#2a9bf0"); vg.addColorStop(1,"#1366c6");
+  ctx.fillStyle=vg; ctx.fill();
+  ctx.save(); rrVan(ctx,32.5,22,31,19,10); ctx.clip();
+  ctx.fillStyle="rgba(255,255,255,0.45)"; ctx.beginPath(); ctx.ellipse(42,25,9,3.5,-0.4,0,Math.PI*2); ctx.fill(); ctx.restore();
 
-      <div class="options-section">
-        <p class="options-section-title">🖥️ Ecrã</p>
-        <label class="options-toggle-row">
-          <span>Ecrã completo (também tecla <kbd>F</kbd>)</span>
-          <button id="optBtnFS" class="option-toggle-btn">⛶ Entrar</button>
-        </label>
-      </div>
+  if(!blink){
+    ctx.fillStyle="#0a0f1c";
+    ctx.beginPath(); ctx.ellipse(41,30,3.3,4,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(55,30,3.3,4,0,0,Math.PI*2); ctx.fill();
+    cfVan(ctx,42.3,28.4,1.5,"#fff"); cfVan(ctx,39.9,31,0.8,"#fff");
+    cfVan(ctx,56.3,28.4,1.5,"#fff"); cfVan(ctx,53.9,31,0.8,"#fff");
+  } else if(blink==="happy"){
+    ctx.lineWidth=3.2; ctx.strokeStyle="#0a0f1c"; ctx.lineCap="round";
+    ctx.beginPath(); ctx.arc(41,31,3.9,0.10*Math.PI,0.90*Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.arc(55,31,3.9,0.10*Math.PI,0.90*Math.PI); ctx.stroke();
+    cfVan(ctx,33.5,35.5,3,"rgba(255,120,120,0.55)");
+    cfVan(ctx,62.5,35.5,3,"rgba(255,120,120,0.55)");
+  } else {
+    ctx.lineWidth=3; ctx.strokeStyle="#0a0f1c";
+    ctx.beginPath(); ctx.arc(41,31,3.5,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.arc(55,31,3.5,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+  }
+  ctx.fillStyle="#0a0f1c";
+  if(blink==="happy"){
+    ctx.beginPath(); ctx.ellipse(48,36,6.2,4.2,0,0,Math.PI); ctx.fill();
+    ctx.fillStyle="#ff7a7a";
+    ctx.beginPath(); ctx.ellipse(48,38,3.2,1.9,0,0,Math.PI); ctx.fill();
+  } else {
+    ctx.beginPath(); ctx.ellipse(48,36,4.6,3.2,0,0,Math.PI); ctx.fill();
+    ctx.fillStyle="#ff7a7a";
+    ctx.beginPath(); ctx.ellipse(48,37.4,2.4,1.5,0,0,Math.PI); ctx.fill();
+  }
+  ctx.restore();
+}
 
-      <div class="options-section">
-        <p class="options-section-title">📋 Atalhos de teclado</p>
-        <div class="options-keys-grid">
-          <span><kbd>← →</kbd></span><span>Mover o VanBerto's</span>
-          <span><kbd>↑</kbd> / <kbd>Espaço</kbd></span><span>Saltar</span>
-          <span><kbd>↓</kbd> / <kbd>S</kbd></span><span>Agachar</span>
-          <span><kbd>H</kbd></span><span>Alto Contraste</span>
-          <span><kbd>F</kbd></span><span>Ecrã completo</span>
-        </div>
-      </div>
+/* ── mascote: expressões, balão de fala ── */
+const vbCv=$('vb'), vbCtx=vbCv.getContext('2d'), bubbleEl=$('bubble');
+let vbBusy=false, bubbleT=null;
+const vbDraw=(b,s,a)=>drawVanBerto(vbCtx,b,s,a);
+vbDraw(false,-1,false);
+function vbSay(msg,ms){
+  clearTimeout(bubbleT);
+  bubbleEl.textContent=msg; bubbleEl.classList.add('show');
+  bubbleT=setTimeout(()=>bubbleEl.classList.remove('show'),ms||3200);
+}
+function vbBlink(){
+  if(vbBusy) return;
+  vbDraw('blink',-1,false);
+  setTimeout(()=>{ if(!vbBusy) vbDraw(false,-1,false); },170);
+}
+function vbWalk(steps,speed){
+  if(vbBusy) return; vbBusy=true; let i=0;
+  const iv=setInterval(()=>{
+    vbDraw(false,i%2===0?0:1,false); i++;
+    if(i>=(steps||6)){ clearInterval(iv); vbDraw(false,-1,false); vbBusy=false; }
+  },speed||170);
+}
+function vbJump(){
+  vbBusy=true;
+  vbCv.classList.remove('bounce'); void vbCv.offsetWidth; vbCv.classList.add('bounce');
+  vbDraw('happy',-1,true);
+  setTimeout(()=>{ vbDraw(false,-1,false); vbBusy=false; },700);
+}
+function vbDance(cycles){
+  vbBusy=true; let i=0; const total=(cycles||4)*2;
+  vbDraw('happy',0,true);
+  const iv=setInterval(()=>{
+    i++;
+    if(i>=total){ clearInterval(iv); vbDraw(false,-1,false); vbBusy=false; return; }
+    vbDraw('happy',i%2===0?0:1,i%2===0);
+  },170);
+}
+function vbSad(){
+  vbBusy=true; vbDraw('sad',-1,false);
+  setTimeout(()=>{ vbDraw(false,-1,false); vbBusy=false; },2600);
+}
+setInterval(()=>{ if(vbBusy||document.hidden) return; Math.random()<.55?vbBlink():vbWalk(); },3600);
+const CHAT=["Olá! Vamos jogar? 🎮","Usa a sombra para acertar! 👻","Completa linhas! 📏","Pensa antes de largar! 🧠","Boa sorte! 🌟","Conto contigo! 🤩"];
+vbCv.addEventListener('click',()=>{ vbSay(CHAT[Math.floor(Math.random()*CHAT.length)]); vbJump(); });
+vbCv.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); vbCv.click(); } });
 
-      </div>
 
-      <div class="row">
-        <button id="btnCloseOptions" class="btn primary">Guardar e Fechar</button>
-      </div>
-    </div>
-  </div>
+let playerName='';
+try{ playerName=(localStorage.getItem('mundocrianca_player')||'').trim(); }catch(e){}
+function showGreet(){ $('greet').textContent=playerName?'👋 Olá, '+playerName+'! ✏️':''; $('greet').title='Mudar o nome'; }
+showGreet();
 
-  <!-- ═══════════════════════════════════════════
-       CERTIFICADO FINAL
-  ═══════════════════════════════════════════ -->
-  <div id="certificateOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Certificado">
-    <div class="card certificate-card">
-      <div class="certificate-header">
-        <div class="certificate-seal">🏛️</div>
-        <h2 class="certificate-title" id="certTitle">Certificado Oficial</h2>
-        <p class="certificate-subtitle" id="certSubtitle">de Defensor dos Direitos das Crianças</p>
-      </div>
-      <div class="certificate-robot">
-        <img src="vanberto_real.png" alt="VanBerto's" class="certificate-robot-img" />
-      </div>
-      <div class="certificate-body">
-        <p class="certificate-text">Este certificado é atribuído a</p>
-        <p class="certificate-name" id="certPlayerName">Herói das Crianças</p>
-        <p class="certificate-text" id="certIntro2">que, com coragem, atenção e sabedoria, concluiu a missão das</p>
-        <p class="certificate-highlight" id="certHighlight">20 Direitos das Crianças</p>
-        <p class="certificate-text" id="certOutro">tornando-se oficialmente Defensor dos Direitos das Crianças.</p>
-      </div>
-      <div class="certificate-stats">
-        <div class="cert-stat"><span class="cert-stat-icon">🌟</span><strong id="certScore">0</strong><span>pontos</span></div>
-        <div class="cert-stat"><span class="cert-stat-icon">✅</span><strong id="certCorrect">—</strong><span>acertos</span></div>
-        <div class="cert-stat"><span class="cert-stat-icon">⭐</span><strong id="certStars">—</strong><span>estrelas</span></div>
-        <div class="cert-stat"><span class="cert-stat-icon">🏆</span><strong id="certMedal">—</strong><span>medalha</span></div>
-      </div>
-      <p class="certificate-date" id="certDate"></p>
-      <div class="certificate-signature">
-        <div class="cert-sig-line"></div>
-        <p class="cert-sig-name">✦ © Prof.ª Vanda Várzea ✦</p>
-        <p class="cert-sig-role">Professora de Tecnologias de Informação e Comunicação</p>
-      </div>
-      <div class="row" style="margin-top:14px;">
-        <button id="btnCertBack" class="btn">← Voltar</button>
-        <button id="btnCertPrint" class="btn">🖨️ Imprimir</button>
-        <button id="btnCertRestart" class="btn primary">🔄 Jogar de novo</button>
-      </div>
-    </div>
-  </div>
+/* ═══════════════ SOM ═══════════════ */
+let soundOn=true, audioCtx=null;
+function ensureAudio(){
+  if(!audioCtx){ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return; audioCtx=new AC(); }
+  if(audioCtx.state==='suspended') audioCtx.resume();
+}
+function beep(freq,dur,type,vol,slideTo,delay){
+  if(!soundOn||!audioCtx) return;
+  try{
+    const t0=audioCtx.currentTime+(delay||0), t1=t0+dur/1000;
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.type=type||'square'; o.frequency.setValueAtTime(freq,t0);
+    if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo,t1);
+    g.gain.setValueAtTime(0.0001,t0);
+    g.gain.exponentialRampToValueAtTime(vol||0.05,t0+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t1);
+    o.connect(g); g.connect(audioCtx.destination); o.start(t0); o.stop(t1+0.02);
+  }catch(e){}
+}
+function noiseBurst(dur,vol,f0,f1,delay){
+  if(!soundOn||!audioCtx) return;
+  try{
+    const t0=audioCtx.currentTime+(delay||0), len=Math.max(1,Math.floor(audioCtx.sampleRate*dur/1000));
+    const buf=audioCtx.createBuffer(1,len,audioCtx.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+    const src=audioCtx.createBufferSource(); src.buffer=buf;
+    const f=audioCtx.createBiquadFilter(); f.type='bandpass'; f.Q.value=1.2;
+    f.frequency.setValueAtTime(f0,t0); f.frequency.exponentialRampToValueAtTime(f1,t0+dur/1000);
+    const g=audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001,t0); g.gain.exponentialRampToValueAtTime(vol,t0+dur/4000); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur/1000);
+    src.connect(f); f.connect(g); g.connect(audioCtx.destination); src.start(t0);
+  }catch(e){}
+}
+/* baque no impacto + "whoosh" que acompanha o feixe de luz + notas que sobem a cada combo */
+function sfxLines(n,cmb){
+  const r=Math.pow(2,Math.min(Math.max(cmb-1,0),8)/12), hold=holdFor(n)/1000;
+  beep(150,170,'sine',0.13,45,0);
+  noiseBurst(60,0.05,3000,900,0);
+  noiseBurst(300,0.06,600,5000,hold);
+  [1,1.25,1.5,2,2.5,3].slice(0,n+2).forEach((q,i)=>beep(523*r*q,120,'triangle',0.07,523*r*q*1.03,hold+i*0.07));
+  if(n>=4) [1047,1319,1568,2093].forEach((f,i)=>beep(f*r,160,'sine',0.045,null,hold+0.1+i*0.06));
+  /* brilhos a subir em escala pentatónica: quanto mais linhas, mais faíscas */
+  if(n>=2){ const pent=[1,1.125,1.25,1.5,1.667,2]; for(let i=0;i<Math.min(8,3+n*2);i++) beep(1047*r*pent[i%6]*(i>=6?1.5:1),90,'sine',0.032,null,hold+0.14+i*0.045); }
+  if(n>=4) [523,659,784,1047].forEach(f=>beep(f*r,560,'triangle',0.05,null,hold+0.05));   /* acorde de vitória */
+}
+function sfxLevel(){
+  [660,880,1100,1320].forEach((f,i)=>{ beep(f,120,'square',0.05,f*1.05,i*0.08); beep(f/2,200,'triangle',0.05,null,i*0.08); });
+  [523,659,784,1047].forEach(f=>beep(f,520,'triangle',0.04,null,0.34));
+}
+function sfxCorrect(streak){ beep(988,90,'triangle',0.07,null,0); beep(1319,260,'triangle',0.07,null,0.09); if(streak>=3) beep(1760,300,'sine',0.05,null,0.2); }
+function sfxWrong(){ beep(240,200,'triangle',0.05,150); }
+function sfxPerfect(){ [523,659,784,1047,1319,1568,2093].forEach((f,i)=>beep(f,170,'triangle',0.07,f*1.02,i*0.07)); [523,784,1047,1568].forEach(f=>beep(f,700,'triangle',0.045,null,0.52)); }
+function sfxOver(){ [392,330,262,196].forEach((f,i)=>beep(f,220,'triangle',0.07,f*0.9,i*0.17)); }
+/* fanfarra do fim: quanto melhor a medalha, maior a festa */
+function sfxParty(tier,rec){
+  const run=[523,659,784,1047,1319,1568,2093], n=[3,5,6,7][tier]+(rec?1:0);
+  for(let i=0;i<Math.min(n,run.length);i++) beep(run[i],150,'triangle',0.07,run[i]*1.01,i*0.09);
+  const t0=n*0.09+0.05;
+  [523,659,784,1047].slice(0,tier>=2?4:3).forEach(f=>beep(f,tier>=2?950:520,'triangle',0.05,null,t0));
+  if(tier>=3||rec) for(let i=0;i<8;i++) beep(1500+Math.random()*1800,70,'sine',0.03,null,t0+0.1+i*0.12);
+}
 
-  <!-- ═══════════════════════════════════════════
-       "DIREITO RECUPERADO!" — popup curto
-  ═══════════════════════════════════════════ -->
-  <div id="rightRecoveredOverlay" aria-hidden="true">
-    <div id="rightRecoveredPanel">
-      <div class="rr-icon">✅</div>
-      <p class="rr-title">Direito recuperado!</p>
-      <p class="rr-name" id="rrName"></p>
-    </div>
-  </div>
+/* ═══════════════ JOGO ═══════════════ */
+const COLS=12, ROWS=22, CELL=30, W=COLS*CELL, H=ROWS*CELL;
+const POINTS_LEVEL=1000, CLEAR_MS=500;
+const lvFrac=()=>Math.max(0,Math.min(1,1-Math.max(0,level*POINTS_LEVEL-score)/POINTS_LEVEL));  /* progresso dentro do nível atual */
+const holdFor=n=>n>=4?200:70+n*10;   /* "hit-stop": pausa com a linha toda branca; no Tetris é mais longa (câmara lenta) */
+const PRAISE={1:['Linha!','Boa!','Limpinho!'],2:['Duas linhas!','Dupla!','Bem jogado!'],3:['Três linhas!','Tripla!','Fantástico!'],4:['TETRIS!']};
 
-  <!-- ═══════════════════════════════════════════
-       MENSAGEM DINÂMICA (feedback contextual)
-  ═══════════════════════════════════════════ -->
-  <div id="dynamicMsgOverlay" aria-hidden="true">
-    <div id="dynamicMsgPanel">
-      <p id="dynamicMsgText"></p>
-    </div>
-  </div>
+const COLORS={I:'#19d3ff',J:'#3b5bff',L:'#ff8a1f',O:'#ffe033',S:'#7ae83a',T:'#b44cff',Z:'#ff3b3b',U:'#ff4fd8',P:'#dfe6f5',I3:'#00b386'};
+const SHAPES={
+  I:[[1,1,1,1]], J:[[1,0,0],[1,1,1]], L:[[0,0,1],[1,1,1]], O:[[1,1],[1,1]],
+  S:[[0,1,1],[1,1,0]], T:[[0,1,0],[1,1,1]], Z:[[1,1,0],[0,1,1]],
+  U:[[1,0,1],[1,1,1]], P:[[0,1,0],[1,1,1],[0,1,0]], I3:[[1,1,1]]
+};
+const KEYS_ALL=Object.keys(SHAPES), KEYS_CLASSIC=['I','J','L','O','S','T','Z'];
+const DIFF={facil:{n:'FÁCIL',e:'🐢',base:900,f:.93,min:200},normal:{n:'NORMAL',e:'⚡',base:720,f:.92,min:140},dificil:{n:'DIFÍCIL',e:'🔥',base:520,f:.90,min:100}};
+const DIFF_KEYS=['facil','normal','dificil'];
+let diff='normal';
+try{ const d=localStorage.getItem('vb_tetris_dif'); if(DIFF[d]) diff=d; }catch(e){}
+const intervalFor=lv=>Math.max(DIFF[diff].min,Math.round(DIFF[diff].base*Math.pow(DIFF[diff].f,lv-1)));
+let modeExtra=false;
+try{ modeExtra=localStorage.getItem('vb_tetris_modo')==='extra'; }catch(e){}
+const bestKey=()=>(modeExtra?'tetris_best_score_extra':'tetris_best_score_v3')+(diff==='normal'?'':'_'+diff);
 
-  <!-- ═══════════════════════════════════════════
-       COMO JOGAR
-  ═══════════════════════════════════════════ -->
-  <div id="howOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Como jogar">
-    <div class="card" style="max-height:88dvh;overflow-y:auto;padding:18px 20px;">
-      <h2 style="margin-bottom:4px;">Como jogar</h2>
-      <p style="font-size:11px;color: #3730a3;margin:0 0 12px;font-style:italic;">Lê com atenção antes de começar!</p>
+const canvas=$('board'), ctx=canvas.getContext('2d');
+const dpr=Math.min(Math.max(window.devicePixelRatio||1,1.5),2);
+canvas.width=W*dpr; canvas.height=H*dpr;
+const nextCv=$('next'), nextCtx=nextCv.getContext('2d');
+const holdCv=$('hold'), holdCtx=holdCv.getContext('2d');
 
-      <!-- OBJETIVO -->
-      <p style="font-weight:700;font-size:13px;color: #3730a3;margin:8px 0 4px;">🎯 Objetivo</p>
-      <p style="font-size:12px;color: #1e1b4b;margin:0 0 10px;line-height:1.6;">
-        Chega ao <strong>portal ✨</strong> no fim de cada nível. Quando chegares, aparece uma <strong>pergunta</strong> sobre os Direitos das Crianças — responde corretamente para avançar! O jogo tem <strong>20 níveis</strong>.
-      </p>
+const comboEl=$('combo'), scoreEl=$('score'), levelEl=$('level'), linesEl=$('lines'), nextLevelEl=$('nextLevel'), bestEl=$('bestScore');
+const overlay=$('overlay'), ovTitle=$('ovTitle'), ovText=$('ovText'), ovBtn=$('ovBtn');
+const startBtn=$('startBtn'), pauseBtn=$('pauseBtn'), resetBtn=$('resetBtn'), ghostBtn=$('ghostBtn'), quizBtn=$('quizBtn'), modeBtn=$('modeBtn'), diffBtn=$('diffBtn'), helpBtn=$('helpBtn'), soundBtn=$('soundBtn');
 
-      <!-- DIFICULDADE -->
-      <p style="font-weight:700;font-size:13px;color: #3730a3;margin:8px 0 6px;">🎯 Nível de Dificuldade</p>
-      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
-        <div style="background: rgba(196,246,214,0.12);border: 1px solid rgba(30,27,75,0.3);border-radius:8px;padding:7px 10px;font-size:12px;color: #1e1b4b;line-height:1.5;">
-          😊 <strong>Fácil</strong><br>
-          <span style="color: #1e1b4b;">Ritmo habitual — a experiência original do jogo.</span>
-        </div>
-        <div style="background: rgba(214,244,255,0.14);border: 1px solid rgba(30,27,75,0.3);border-radius:8px;padding:7px 10px;font-size:12px;color: #1e1b4b;line-height:1.5;">
-          🎓 <strong>Difícil</strong><br>
-          <span style="color: #1e1b4b;">Vilões/chefes mais rápidos, menos vidas.</span>
-        </div>
-        <div style="background: rgba(255,30,30,0.14);border: 1px solid rgba(255,80,80,0.35);border-radius:8px;padding:7px 10px;font-size:12px;color: #1e1b4b;line-height:1.5;">
-          🔥 <strong>Extremo</strong><br>
-          <span style="color: #b91c1c;">Só 1 vida, vilões/chefes ainda mais rápidos, quase sem Star Power.</span>
-        </div>
-      </div>
-      <p style="font-size:11px;color: #3730a3;margin:0 0 10px;font-style:italic;">
-        💡 Podes escolher ou mudar isto a qualquer momento em Opções.
-      </p>
+let bestScore=0;
+try{ bestScore=Number(localStorage.getItem(bestKey()))||0; }catch(e){}
+bestEl.textContent=bestScore;
 
-      <!-- VILÕES -->
-      <p style="font-weight:700;font-size:13px;color: #3730a3;margin:8px 0 6px;">👾 Os Vilões — cuidado com cada tipo!</p>
-      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
-        <div style="background: rgba(255,30,0,0.12);border: 1px solid rgba(255,80,80,0.3);border-radius:8px;padding:7px 10px;font-size:12px;color: #1e1b4b;line-height:1.5;">
-          🔴 <strong>Trapalhão</strong> — pequeno (o mais fácil)<br>
-          <span style="color: #b91c1c;">Patrulha uma zona pequena em vai-e-vem. Lenta e previsível — boa para treinar!</span>
-        </div>
-        <div style="background: rgba(255,250,238,0.14);border: 1px solid rgba(30,27,75,0.3);border-radius:8px;padding:7px 10px;font-size:12px;color: #1e1b4b;line-height:1.5;">
-          🔵 <strong>Saltitão</strong> — médio<br>
-          <span style="color: #1e1b4b;">Patrulha horizontalmente e salta de vez em quando. Mantém distância!</span>
-        </div>
-        <div style="background: rgba(196,246,214,0.12);border: 1px solid rgba(30,27,75,0.3);border-radius:8px;padding:7px 10px;font-size:12px;color: #1e1b4b;line-height:1.5;">
-          🟢 <strong>Perseguilão</strong> — grande (o mais perigoso)<br>
-          <span style="color: #1e1b4b;">Salta frequentemente e dirige-se ao jogador. Aparece nos níveis mais avançados — muito cuidado!</span>
-        </div>
-      </div>
-      <p style="font-size:11px;color: #3730a3;margin:0 0 10px;font-style:italic;">
-        💡 Se apanhares a estrela ⭐, podes atropelar qualquer vilão durante 8 segundos!
-      </p>
+let board=newBoard(), piece=null, queue=[], held=null, canHold=true, bag=[];
+let fallOff=Array(ROWS).fill(0), fallV=Array(ROWS).fill(0), landSfx=false;
+const FALL_G=.00013, REDUCE=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+const st={maxCombo:0,quizRight:0,quizTotal:0,ms:0,pieces:0};
+let running=false, paused=false, clearing=null;
+let score=0, level=1, lines=0, dropInterval=720, acc=0, showGhost=true;
+let combo=0, pieceCount=0, quizOpen=false, quizOn=true, dispScore=0, qStreak=0;
+const LS_QUIZ='vb_tetris_quiz', LS_HELP='vb_tetris_help_seen', LS_SAVE='vb_tetris_save_v1';
+try{ if(localStorage.getItem(LS_QUIZ)==='off') quizOn=false; }catch(e){}
+function vib(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
 
-      <!-- ITENS -->
-      <p style="font-weight:700;font-size:13px;color: #3730a3;margin:8px 0 6px;">🎁 O que apanhar</p>
-      <ul style="margin:0 0 10px;padding-left:18px;font-size:12px;color: #1e1b4b;line-height:1.9;">
-        <li>⭐ <strong>Estrela</strong> — ativa o <strong>Star Power por 8s</strong>: atropela vilões e ganha pontos!</li>
-        <li>🛡️ <strong>Escudo</strong> — fica maior e <strong>invencível por 8s</strong>; absorve um golpe de vilão</li>
-        <li>🦅 <strong>Asas</strong> — permite <strong>saltar duas vezes</strong> no ar durante 10s (muito útil em plataformas altas!)</li>
-        <li>❤️ <strong>Coração</strong> — ganha <strong>+1 vida</strong> (máximo 5 vidas)</li>
-        <li>🧸 <strong>Brinquedo / 🍭 Chupa-chupa / 🏅 Medalha</strong> — valem <strong>pontos bónus</strong></li>
-        <li>❓ <strong>Ponto de interrogação</strong> — esconde um item surpresa! Passa por cima para revelar</li>
-      </ul>
-      <p style="font-size:11px;color: #3730a3;margin:0 0 10px;font-style:italic;">
-        💡 Se perderes uma vida, <strong>todos os itens voltam a aparecer</strong> — podes apanhá-los de novo!
-      </p>
+function newBoard(){ return Array.from({length:ROWS},()=>Array(COLS).fill(null)); }
+function nextKey(){
+  if(!bag.length){
+    bag=[...(modeExtra?KEYS_ALL:KEYS_CLASSIC)];
+    for(let i=bag.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [bag[i],bag[j]]=[bag[j],bag[i]]; }
+  }
+  return bag.pop();
+}
+function makePiece(k){
+  const sh=SHAPES[k].map(r=>[...r]), x=Math.floor((COLS-sh[0].length)/2);
+  return {k,x,y:-1,vx:x,vy:-1,shape:sh,color:COLORS[k]};
+}
+function newPiece(){ return makePiece(nextKey()); }
+function valid(px,py,sh){
+  sh=sh||piece.shape;
+  for(let y=0;y<sh.length;y++) for(let x=0;x<sh[y].length;x++){
+    if(!sh[y][x]) continue;
+    const nx=piece.x+x+px, ny=piece.y+y+py;
+    if(nx<0||nx>=COLS||ny>=ROWS) return false;
+    if(ny>=0&&board[ny][nx]) return false;
+  }
+  return true;
+}
+function rotate(){
+  const ns=piece.shape[0].map((_,i)=>piece.shape.map(r=>r[i]).reverse());
+  for(const k of [0,-1,1,-2,2]){
+    if(valid(k,0,ns)){ piece.x+=k; piece.shape=ns; beep(880,50,'square',0.04); return; }
+  }
+}
+function merge(){
+  const cells=[];
+  piece.shape.forEach((r,y)=>r.forEach((v,x)=>{ if(v&&piece.y+y>=0){ board[piece.y+y][piece.x+x]=piece.color; cells.push([piece.x+x,piece.y+y]); } }));
+  flashes.push({cells,t:0}); vib(12);
+  cells.forEach(q=>{ if(!valid2(q[0],q[1]+1)) burst((q[0]+.5)*CELL,(q[1]+1)*CELL-2,piece.color,3,2.2); });
+}
+function valid2(x,y){ return y<ROWS&&!(y>=0&&board[y][x]); }
+function doHold(){
+  if(!canHold||!piece||clearing) return;
+  const k=piece.k;
+  if(held){ piece=makePiece(held); } else { piece=queue.shift(); queue.push(newPiece()); }
+  held=k; canHold=false; acc=0; beep(520,70,'triangle',0.05); vib(8);
+  if(!valid(0,0)) gameOver();
+}
+function bump(el){ el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
 
-      <!-- PLATAFORMAS ESPECIAIS -->
-      <p style="font-weight:700;font-size:13px;color: #3730a3;margin:8px 0 6px;">🟡 Plataformas especiais</p>
-      <ul style="margin:0 0 10px;padding-left:18px;font-size:12px;color: #1e1b4b;line-height:1.9;">
-        <li>↔ <strong>Setas horizontais</strong> — a plataforma move-se da esquerda para a direita</li>
-        <li>↕ <strong>Setas verticais</strong> — a plataforma sobe e desce</li>
-        <li>🟠 <strong>Trampolim</strong> — catapulta-te muito mais alto que um salto normal!</li>
-      </ul>
+function spawnNext(){
+  piece=queue.shift(); queue.push(newPiece()); canHold=true;
+  if(!valid(0,0)){ gameOver(); return; }
+  pieceCount++; st.pieces++; saveGame();
+  if(running&&quizOn&&pieceCount%9===0) openQuiz();
+}
+function lockPiece(){
+  merge(); beep(220,50,'square',0.03);
+  piece=null;
+  const rows=[];
+  for(let y=0;y<ROWS;y++) if(board[y].every(c=>c)) rows.push(y);
+  if(rows.length){ combo++; if(combo>st.maxCombo) st.maxCombo=combo; } else combo=0;
+  if(rows.length){
+    const n=rows.length, hold=holdFor(n);
+    clearing={rows,t:0,hold};
+    vib(n>=4?[40,30,40,30,90]:[25,30,25]);
+    const pn=n>=4?9:n>=3?7:5;
+    rows.forEach(y=>{
+      for(let x=0;x<COLS;x++) burst((x+.5)*CELL,(y+.5)*CELL,board[y][x],pn,n>=4?5.6:4.6,hold+x*16);
+      blooms.push({y:(y+.5)*CELL,t:0});
+      rings.push({x:W/2,y:(y+.5)*CELL,t:-hold,max:640,n});   /* onda de choque */
+    });
+    const cy=rows.reduce((a,b)=>a+b,0)/n*CELL+CELL/2, pr=PRAISE[Math.min(n,4)];
+    popText(pr[Math.floor(Math.random()*pr.length)],W/2,cy,n>=2,n>=4?'rainbow':n===3?'#ff9a3c':n===2?'#ffe033':null,n>=4?46:n===3?36:null);
+    if(n>=3) confetti(W/2,cy,n>=4?44:20,5.8,hold);
+    if(n>=2) framePulse(n>=4?'rgba(255,217,59,.95)':'rgba(255,255,255,.75)');
+    if(!REDUCE){
+      wellFlash=[0,.14,.22,.32,.5][Math.min(n,4)];
+      if(n>=4) shake(12,300); else if(n>=2) shake(6,180); else shake(3,120);
+    }
+    sfxLines(n,combo);
+    if(rows.length>=4){ vbSay('TETRIS! 🏆',2600); vbDance(4); }
+    else { vbSay(rows.length===1?'Linha! 🎉':rows.length+' linhas! 🎉',2000); vbJump(); }
+  } else spawnNext();
+}
+function finishClear(){
+  const rows=clearing.rows; clearing=null;
+  const keep=[]; for(let y=0;y<ROWS;y++) if(!rows.includes(y)) keep.push(y);
+  const nb=keep.map(y=>board[y]), off=keep.map(y=>rows.filter(r=>r>y).length);
+  while(nb.length<ROWS){ nb.unshift(Array(COLS).fill(null)); off.unshift(0); }
+  board=nb; fallOff=off; fallV=Array(ROWS).fill(0); landSfx=false;
+  const n=rows.length;
+  lines+=n;
+  const pts=[0,120,300,520,800][Math.min(n,4)]+n*40; score+=pts;
+  popText('+'+pts,W/2,rows.reduce((a,b)=>a+b,0)/n*CELL+CELL/2+(n>=3?40:32),false);
+  if(combo>=2){
+    const b=50*(combo-1); score+=b;
+    popText('Combo x'+combo+'! +'+b,W/2,H*.26,true);
+    const cm=['','','Combo x2! 🔥','Combo x3! Imparável! 🚀','Combo x4! Incrível! 🤩'];
+    vbSay(combo>=5?'Combo x'+combo+'! Lendário! 👑':cm[combo],2600);
+    if(combo>=3) vbDance(3); bump(comboEl);
+  }
+  if(board.every(r=>r.every(c=>!c))){   /* tabuleiro completamente limpo */
+    score+=800; popText('TABULEIRO LIMPO!',W/2,H*.5,true,'rainbow',25); popText('+800',W/2,H*.5+38,true,'#ffe033',30);
+    confetti(W*.25,H*.45,26,6,0); confetti(W*.75,H*.45,26,6,0); framePulse('rgba(255,217,59,.95)');
+    sfxPerfect(); vbSay('Tabuleiro limpo! 🌟',3000); vbDance(5);
+  }
+  bump(scoreEl);
+  const nl=Math.floor(score/POINTS_LEVEL)+1;
+  if(nl>level){
+    level=nl; dropInterval=intervalFor(level); setTheme(level-1);
+    sfxLevel(); bump(levelEl); vbSay('Nível '+level+'! 🚀',2400); popText('Nível '+level+'!',W/2,H*.4,true,'#7ae83a',40);
+    confetti(W*.2,H*.12,18,5.5,0); confetti(W*.8,H*.12,18,5.5,0); framePulse('rgba(120,255,160,.9)');
+  }
+  spawnNext();
+}
+/* ═══════════════ FESTA NO FIM DO JOGO ═══════════════ */
+const partyCv=$('party'), pctx=partyCv.getContext('2d');
+let partyRaf=0, partyP=[], partyEnd=0, partyTier=0, partyRec=false, partyLast=0, partyNextFw=0, partyAcc=0, partyW=0, partyH=0, partyDpr=1;
+const PCOL=['#ff3b3b','#ffe033','#7ae83a','#19d3ff','#b44cff','#ff4fd8','#ff8a1f','#ffffff'];
+function partySize(){
+  const r=partyCv.parentElement.getBoundingClientRect(); partyDpr=Math.min(2,window.devicePixelRatio||1);
+  partyW=r.width; partyH=r.height; partyCv.width=Math.round(partyW*partyDpr); partyCv.height=Math.round(partyH*partyDpr);
+}
+function partyStop(){ cancelAnimationFrame(partyRaf); partyRaf=0; partyP.length=0; pctx.clearRect(0,0,partyCv.width,partyCv.height); }
+function partyConfetti(x,y,vx,vy){
+  partyP.push({k:Math.random()<.18?'s':Math.random()<.3?'o':'c',x,y,vx,vy,rot:Math.random()*6.3,vr:(Math.random()-.5)*10,flip:Math.random()*6.3,
+    w:6+Math.random()*6,h:9+Math.random()*7,c:PCOL[Math.floor(Math.random()*PCOL.length)]});
+}
+function partyCannon(side,n){
+  for(let i=0;i<n;i++){
+    const a=-(0.8+Math.random()*0.6), sp=(650+Math.random()*650)*Math.max(.7,partyH/700);
+    partyConfetti(side<0?partyW*.03:partyW*.97,partyH*.96,Math.cos(a)*sp*(side<0?1:-1),Math.sin(a)*sp);
+  }
+}
+function partyFirework(){
+  const x=partyW*(.15+Math.random()*.7), y=partyH*(.1+Math.random()*.32), c=PCOL[Math.floor(Math.random()*7)], n=34;
+  for(let i=0;i<n;i++){ const a=i/n*6.283+Math.random()*.2, sp=110+Math.random()*170;
+    partyP.push({k:'f',x,y,px:x,py:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:0,max:.9+Math.random()*.6,c}); }
+  beep(180,90,'triangle',0.05,60); beep(1200+Math.random()*800,60,'sine',0.025,null,0.05);
+}
+function partyStar(ctx,x,y,r){ ctx.beginPath(); for(let i=0;i<10;i++){ const a=-Math.PI/2+i*Math.PI/5, rr=i%2?r*.45:r; ctx.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr); } ctx.closePath(); ctx.fill(); }
+function partyLoop(){
+  const now=performance.now(), dt=Math.min((now-partyLast)/1000,.05); partyLast=now;
+  pctx.setTransform(partyDpr,0,0,partyDpr,0,0); pctx.clearRect(0,0,partyW,partyH);
+  const active=now<partyEnd;
+  if(active&&now<partyEnd-1300&&partyP.length<420){
+    partyAcc+=(22+partyTier*22+(partyRec?30:0))*dt;
+    while(partyAcc>=1){ partyAcc--; partyConfetti(Math.random()*partyW,-12,(Math.random()-.5)*80,60+Math.random()*90); }
+  }
+  if((partyTier>=3||partyRec)&&active&&now<partyEnd-900&&now>=partyNextFw){ partyFirework(); partyNextFw=now+420+Math.random()*350; }
+  for(let i=partyP.length-1;i>=0;i--){
+    const q=partyP[i];
+    if(q.k==='f'){
+      q.life+=dt; if(q.life>q.max){ partyP.splice(i,1); continue; }
+      q.px=q.x; q.py=q.y; q.vy+=140*dt; q.vx*=1-1.1*dt; q.vy*=1-1.1*dt; q.x+=q.vx*dt; q.y+=q.vy*dt;
+      pctx.globalCompositeOperation='lighter'; pctx.globalAlpha=1-q.life/q.max; pctx.strokeStyle=q.c; pctx.lineWidth=2.4;
+      pctx.beginPath(); pctx.moveTo(q.px,q.py); pctx.lineTo(q.x,q.y); pctx.stroke();
+      pctx.globalCompositeOperation='source-over'; pctx.globalAlpha=1; continue;
+    }
+    q.vy+=700*dt; q.vx*=1-2*dt; q.vy*=1-2*dt; q.x+=(q.vx+Math.sin(q.flip)*30)*dt; q.y+=q.vy*dt; q.rot+=q.vr*dt; q.flip+=8*dt;
+    if(q.y>partyH+24){ partyP.splice(i,1); continue; }
+    pctx.save(); pctx.translate(q.x,q.y); pctx.rotate(q.rot); pctx.fillStyle=q.c;
+    if(q.k==='c'){ pctx.scale(1,Math.cos(q.flip)); pctx.fillRect(-q.w/2,-q.h/2,q.w,q.h); }
+    else if(q.k==='o'){ pctx.beginPath(); pctx.arc(0,0,q.w*.45,0,6.283); pctx.fill(); }
+    else partyStar(pctx,0,0,q.w*.9);
+    pctx.restore();
+  }
+  if(!active&&!partyP.length){ partyRaf=0; pctx.clearRect(0,0,partyW,partyH); return; }
+  partyRaf=requestAnimationFrame(partyLoop);
+}
+function partyStart(tier,rec){
+  partyStop(); if(REDUCE) return;
+  partySize(); partyTier=tier; partyRec=rec; partyAcc=0;
+  partyEnd=performance.now()+((tier>=3||rec)?8000:tier>=1?6000:4200); partyNextFw=performance.now()+700; partyLast=performance.now();
+  const n=26+tier*20+(rec?30:0);
+  partyCannon(-1,n); partyCannon(1,n);
+  setTimeout(()=>{ if(partyRaf){ partyCannon(-1,Math.round(n*.6)); partyCannon(1,Math.round(n*.6)); } },900);
+  partyRaf=requestAnimationFrame(partyLoop);
+}
+/* os números do resumo "rolam" de 0 até ao valor final */
+function partyCount(){
+  const els=[...ovText.querySelectorAll('b[data-to]')];
+  if(REDUCE||!els.length) return;
+  const t0=performance.now(); let lastTick=0;
+  els.forEach(el=>{ el.textContent='0'; });
+  (function step(){
+    const now=performance.now(); let done=true;
+    els.forEach((el,i)=>{
+      if(!el.isConnected) return;
+      const to=+el.dataset.to, start=t0+900+i*150, k=Math.min(Math.max((now-start)/1000,0),1);
+      if(k<1) done=false;
+      el.textContent=Math.round(to*(1-Math.pow(1-k,3)));
+      if(i===0&&k>0&&k<1&&now-lastTick>75){ lastTick=now; beep(700+k*700,25,'square',0.02); }
+    });
+    if(!done&&overlay&&!overlay.classList.contains('hidden')) requestAnimationFrame(step);
+    else els.forEach(el=>{ if(el.isConnected) el.textContent=el.dataset.to; });
+  })();
+}
 
-      <!-- CANOS -->
-      <p style="font-weight:700;font-size:13px;color: #3730a3;margin:8px 0 6px;">🚇 Canos</p>
-      <ul style="margin:0 0 10px;padding-left:18px;font-size:12px;color: #1e1b4b;line-height:1.9;">
-        <li>Chega-te perto de um cano e carrega <strong>↓</strong> (ou <strong>S</strong>) para tentares um atalho!</li>
-        <li>🎁 Alguns levam a uma <strong>sala secreta</strong>, com uma recompensa e uma curiosidade à espera</li>
-        <li>Nem todos os canos são de entrar — alguns são só obstáculos, tens de lhes saltar por cima!</li>
-      </ul>
+function gameOver(){
+  running=false; piece=null; stopSpeak(); clearSave();
+  const novo=score>bestScore;
+  if(novo){ bestScore=score; try{ localStorage.setItem(bestKey(),bestScore); }catch(e){} bestEl.textContent=bestScore; }
+  const tier=score>=2500?3:score>=1200?2:score>=400?1:0;
+  const medal=[['⭐','boa tentativa!'],['🥉','medalha de bronze!'],['🥈','medalha de prata!'],['🥇','medalha de ouro!']][tier];
+  const mins=Math.floor(st.ms/60000), secs=Math.floor(st.ms/1000)%60;
+  const title=novo?'NOVO RECORDE! 🏆':tier>=1?'PARABÉNS! 🎉':'BOA TENTATIVA! 🎈';
+  sfxParty(tier,novo);
+  vbSay(novo?'Novo recorde! 🏆':tier>=1?'Parabéns! 🎉':'Boa tentativa! 💪',3500); vbDance(5);
+  showOverlay(title,
+    '<div class="medal-wrap'+(tier>=3||novo?' rays':'')+'"><div class="medal party">'+medal[0]+'</div></div>'+
+    '<div class="medal-t party">'+(playerName?playerName+', '+medal[1]:medal[1][0].toUpperCase()+medal[1].slice(1))+'</div>'+
+    '<div class="sum party"><div>⭐ Pontos <b data-to="'+score+'">'+score+'</b></div><div>🧩 Nível <b data-to="'+level+'">'+level+'</b></div><div>📏 Linhas <b data-to="'+lines+'">'+lines+'</b></div><div>🔥 Combo máx. <b>x'+st.maxCombo+'</b></div><div>🧠 Perguntas <b>'+st.quizRight+'/'+st.quizTotal+'</b></div><div>⏱️ Tempo <b>'+mins+':'+String(secs).padStart(2,'0')+'</b></div></div>'+
+    (novo?'<div class="rec">🏆 <strong>Novo recorde!</strong></div>':''),
+    '↻ JOGAR OUTRA VEZ');
+  ovTitle.classList.remove('party'); void ovTitle.offsetWidth; ovTitle.classList.add('party');
+  partyStart(tier,novo); partyCount();
+  const resumo='Fim de jogo. '+(playerName?playerName+', f':'F')+'izeste '+score+' pontos, chegaste ao nível '+level+', com '+lines+' linhas, e acertaste '+st.quizRight+' de '+st.quizTotal+' perguntas. '+(novo?'Novo recorde! ':'')+'Ganhaste '+(tier?medal[1]:'uma estrela. Boa tentativa!');
+  srSay(resumo); if(a11y.read) setTimeout(()=>speakText(resumo),900);
+}
+function gravity(){ if(valid(0,1)) piece.y++; else lockPiece(); }
+function softDrop(){ if(valid(0,1)){ piece.y++; score+=1; beep(660,25,'square',0.025); } else lockPiece(); }
+function hardDrop(){
+  const y0=piece.y; let n=0; while(valid(0,1)){ piece.y++; n++; }
+  score+=n*2;
+  if(n>0) piece.shape[0].forEach((_,x)=>{ if(piece.shape.some(r=>r[x])) trails.push({x:piece.x+x,y0:Math.max(0,y0),y1:piece.y+1,c:piece.color,t:0}); });
+  piece.vy=piece.y; shake(n>6?6:3,120); lockPiece();
+}
+function move(dx){ if(valid(dx,0)){ piece.x+=dx; beep(880,40,'square',0.04); } }
+function ghostY(){ let y=piece.y; while(valid(0,y-piece.y+1)) y++; return y; }
 
-      <!-- PONTUAÇÃO -->
-      <p style="font-weight:700;font-size:13px;color: #3730a3;margin:8px 0 6px;">⭐ Pontuação</p>
-      <ul style="margin:0 0 10px;padding-left:18px;font-size:12px;color: #1e1b4b;line-height:1.9;">
-        <li>✅ Resposta certa à primeira → <strong>+100 pontos por nível</strong></li>
-        <li>🥇 Nível sem perder nenhuma vida → <strong>bónus +50 pontos</strong></li>
-        <li>💥 Atropelar vilão com Star Power → <strong>+50 pontos por vilão</strong></li>
-      </ul>
+/* ═══════════════ DESENHO (blocos "gomas" brilhantes + efeitos) ═══════════════ */
+const shadeCache={};
+function shades(hex){
+  if(shadeCache[hex]) return shadeCache[hex];
+  const n=parseInt(hex.slice(1),16), c=[n>>16&255,n>>8&255,n&255];
+  const mix=(t,f)=>'rgb('+c.map(v=>Math.round(v+(t-v)*f)).join(',')+')';
+  return shadeCache[hex]={base:'rgb('+c.join(',')+')',light:mix(255,.55),mid:mix(255,.2),dark:mix(0,.3),edge:mix(0,.55),rgb:c};
+}
+function drawBlock(c,x,y,s,hex,sc){
+  if(sc!==undefined&&sc!==1){ const d=s*(1-sc)/2; x+=d; y+=d; s*=sc; }
+  if(s<=6) return;   /* demasiado pequeno para desenhar (raio negativo faz o canvas lançar erro) */
+  const sh=shades(hex), g=1.3, px=x+g, py=y+g, ps=s-2*g, r=ps*.26;
+  rrVan(c,px,py,ps,ps,r);
+  const gr=c.createLinearGradient(0,py,0,py+ps);
+  gr.addColorStop(0,sh.light); gr.addColorStop(.35,sh.mid); gr.addColorStop(.7,sh.base); gr.addColorStop(1,sh.dark);
+  c.fillStyle=gr; c.fill();
+  c.lineWidth=1.5; c.strokeStyle=sh.edge; c.stroke();
+  // painel interior com brilho
+  rrVan(c,px+ps*.15,py+ps*.15,ps*.7,ps*.7,r*.6);
+  const g2=c.createLinearGradient(0,py+ps*.15,0,py+ps*.85);
+  g2.addColorStop(0,'rgba(255,255,255,.30)'); g2.addColorStop(.5,'rgba(255,255,255,.04)'); g2.addColorStop(1,'rgba(0,0,0,.14)');
+  c.fillStyle=g2; c.fill();
+  // reflexo
+  c.fillStyle='rgba(255,255,255,.75)';
+  c.beginPath(); c.ellipse(px+ps*.3,py+ps*.25,ps*.15,ps*.075,-.5,0,Math.PI*2); c.fill();
+  c.fillStyle='rgba(255,255,255,.45)';
+  c.beginPath(); c.arc(px+ps*.14,py+ps*.44,ps*.04,0,Math.PI*2); c.fill();
+}
 
-      <!-- ESTRELAS COLECIONÁVEIS -->
-      <p style="font-weight:700;font-size:13px;color: #3730a3;margin:8px 0 6px;">⭐ Estrelas Colecionáveis (por nível)</p>
-      <ul style="margin:0 0 10px;padding-left:18px;font-size:12px;color: #1e1b4b;line-height:1.9;">
-        <li>⭐ 1ª estrela — encontraste segredos escondidos no nível</li>
-        <li>⭐ 2ª estrela — completaste sem perder nenhuma vida</li>
-        <li>⭐ 3ª estrela — acertaste a pergunta à primeira tentativa</li>
-      </ul>
+const parts=[], pops=[], flashes=[], trails=[], blooms=[], rings=[];
+let shakeT=0, shakeA=0, wellFlash=0;
+function burst(x,y,hex,n,pw,delay){
+  const rgb=shades(hex).rgb;
+  for(let i=0;i<n&&parts.length<900;i++){
+    const a=Math.random()*Math.PI*2, v=(.4+Math.random())*pw;
+    parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-pw*.5,life:0,max:520+Math.random()*420,
+      s:2.5+Math.random()*4,rgb,star:Math.random()<.35,delay:delay||0,rot:Math.random()*6});
+  }
+}
+function popText(txt,x,y,big,col,size){ pops.push({txt,x,y,t:0,big,col,size}); }
+const CONF=['#ff3b3b','#ffe033','#7ae83a','#19d3ff','#b44cff','#ff4fd8','#ff8a1f'];
+function confetti(x,y,n,pw,delay){ for(let i=0;i<n;i++) burst(x+(Math.random()-.5)*24,y,CONF[i%CONF.length],1,pw,delay||0); }
+function framePulse(rgb){
+  if(REDUCE) return;
+  frameEl.style.setProperty('--pc',rgb||'rgba(255,255,255,.85)');
+  frameEl.classList.remove('pulse'); void frameEl.offsetWidth; frameEl.classList.add('pulse');
+}
+function shake(a,ms){ shakeA=a; shakeT=ms; }
+function stepFx(dt){
+  for(let i=parts.length-1;i>=0;i--){
+    const p=parts[i];
+    if(p.delay>0){ p.delay-=dt; continue; }
+    p.life+=dt; p.x+=p.vx*dt/16; p.y+=p.vy*dt/16; p.vy+=.16*dt/16; p.vx*=.995; p.rot+=.12;
+    if(p.life>=p.max) parts.splice(i,1);
+  }
+  for(let i=pops.length-1;i>=0;i--){ pops[i].t+=dt; if(pops[i].t>1100) pops.splice(i,1); }
+  for(let i=flashes.length-1;i>=0;i--){ flashes[i].t+=dt; if(flashes[i].t>220) flashes.splice(i,1); }
+  for(let i=trails.length-1;i>=0;i--){ trails[i].t+=dt; if(trails[i].t>260) trails.splice(i,1); }
+  for(let i=blooms.length-1;i>=0;i--){ blooms[i].t+=dt; if(blooms[i].t>460) blooms.splice(i,1); }
+  for(let i=rings.length-1;i>=0;i--){ rings[i].t+=dt; if(rings[i].t>rings[i].max) rings.splice(i,1); }
+  if(wellFlash>0){ wellFlash*=Math.exp(-dt/120); if(wellFlash<.005) wellFlash=0; }
+  if(shakeT>0) shakeT-=dt;
+}
 
-      <!-- CONTROLOS -->
-      <p style="font-weight:700;font-size:13px;color: #3730a3;margin:8px 0 4px;">🖥️ Controlos — PC / Teclado</p>
-      <p style="margin:2px 0 8px;font-size:12px;color: #1e1b4b;">← → para andar &nbsp;|&nbsp; ↑ ou Espaço para saltar &nbsp;|&nbsp; ↓ ou S para agachar &nbsp;|&nbsp; <strong style="color: #1e1b4b;">P</strong> — pausa &nbsp;|&nbsp; <strong style="color: #1e1b4b;">H</strong> — alto contraste &nbsp;|&nbsp; <strong style="color: #1e1b4b;">F</strong> — ecrã todo</p>
-      <p style="font-weight:700;font-size:13px;color: #3730a3;margin:4px 0 4px;">📱 Tablet / Telemóvel</p>
-      <p style="margin:2px 0 14px;font-size:12px;color: #1e1b4b;">Mantém o dedo no lado esquerdo/direito para andar · Toque rápido para saltar</p>
+const THEMES=[
+  {top:[27,13,62],bot:[8,4,26],acc:[236,30,121]},
+  {top:[8,40,72],bot:[3,12,32],acc:[56,189,248]},
+  {top:[10,62,50],bot:[3,22,20],acc:[78,203,113]},
+  {top:[72,42,8],bot:[30,12,3],acc:[255,167,51]},
+  {top:[62,14,72],bot:[24,4,36],acc:[194,107,255]},
+  {top:[72,10,28],bot:[30,3,10],acc:[255,77,109]}
+];
+const themeCur={top:[...THEMES[0].top],bot:[...THEMES[0].bot],acc:[...THEMES[0].acc]};
+let themeTgt=THEMES[0];
+const frameEl=document.querySelector('.frame');
+function setTheme(i){
+  themeTgt=THEMES[i%THEMES.length]; const a=themeTgt.acc.join(',');
+  frameEl.style.setProperty('--glow','rgba('+a+',.45)'); frameEl.style.setProperty('--edge','rgba('+a+',.85)');
+}
+function stepTheme(dt){
+  const k=1-Math.exp(-dt/350);
+  for(const key of ['top','bot','acc']) for(let i=0;i<3;i++) themeCur[key][i]+=(themeTgt[key][i]-themeCur[key][i])*k;
+}
+const rgbs=a=>a.map(v=>Math.round(v)).join(',');
+function drawWell(){
+  const bg=ctx.createLinearGradient(0,0,0,H); bg.addColorStop(0,'rgb('+rgbs(themeCur.top)+')'); bg.addColorStop(1,'rgb('+rgbs(themeCur.bot)+')');
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+  const gl=ctx.createRadialGradient(W/2,H,10,W/2,H,H*.7); gl.addColorStop(0,'rgba('+rgbs(themeCur.acc)+',.30)'); gl.addColorStop(1,'rgba('+rgbs(themeCur.acc)+',0)');
+  ctx.fillStyle=gl; ctx.fillRect(0,0,W,H);
+  for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++) if((x+y)%2===0){ ctx.fillStyle='rgba(255,255,255,.05)'; ctx.fillRect(x*CELL,y*CELL,CELL,CELL); }
+  ctx.strokeStyle='rgba('+rgbs(themeCur.acc)+',.18)'; ctx.lineWidth=1; ctx.beginPath();
+  for(let x=1;x<COLS;x++){ ctx.moveTo(x*CELL+.5,0); ctx.lineTo(x*CELL+.5,H); }
+  for(let y=1;y<ROWS;y++){ ctx.moveTo(0,y*CELL+.5); ctx.lineTo(W,y*CELL+.5); }
+  ctx.stroke();
+}
 
-      <button id="btnCloseHow" class="btn primary" style="width:100%;">Entendido — vamos jogar! ▶</button>
-    </div>
-  </div>
+function render(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  if(shakeT>0){ const m=shakeA*(shakeT/150); ctx.translate((Math.random()-.5)*m,(Math.random()-.5)*m); }
+  drawWell();
 
-  <!-- ═══════════════════════════════════════════
-       MODAL PERGUNTA
-  ═══════════════════════════════════════════ -->
-  <div id="quizOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="quizQuestion">
-    <div class="card">
-      <div class="card-seal" aria-hidden="true">🔐</div>
-      <p id="quizQuestion" class="q" aria-live="polite"></p>
-      <div id="quizAnswers" class="answers" role="group" aria-label="Opções de resposta"></div>
-      <p id="quizFeedback" class="feedback" aria-live="assertive"></p>
-      <p id="quizExplanation" class="explanation hidden"></p>
-      <button id="btnCloseQuiz" class="btn hidden">Continuar</button>
-    </div>
-  </div>
+  // rasto da queda direta
+  for(const t of trails){
+    const a=.4*(1-t.t/260), g=ctx.createLinearGradient(0,t.y0*CELL,0,t.y1*CELL);
+    g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(1,'rgba('+shades(t.c).rgb.join(',')+','+a+')');
+    ctx.fillStyle=g; ctx.fillRect(t.x*CELL+3,t.y0*CELL,CELL-6,(t.y1-t.y0)*CELL);
+  }
 
-  <!-- CONTROLO DO PROFESSOR — botão ☰ único durante o jogo -->
-  <div id="teacherControls" style="position:fixed;top:10px;right:10px;z-index:9500;">
-    <!-- NOME DO JOGADOR — HUD HTML (ao lado do ☰, para não tapar o texto do HUD do jogo, à esquerda) -->
-    <div id="playerNameHtml" style="
-      display:none; align-self:center; margin-right:8px;
-      font-family:'Baloo 2',sans-serif; font-size:17px; font-weight:900;
-      color: #1e1b4b; text-shadow: none;
-      pointer-events:none; letter-spacing:0.3px;
-      background: rgba(255,247,226,0.55); border-radius:8px; padding:4px 10px;
-      border: 1px solid rgba(30,27,75,0.25); white-space:nowrap;
-    "></div>
-    <button id="btnTeacherMenu" class="btn" aria-label="Menu do jogo" title="Menu">☰ Menu</button>
-    <!-- Botões fantasma — usados internamente pelo JS para compatibilidade -->
-    <button id="btnFullscreenGame" style="display:none"></button>
-    <button id="btnTouchToggle"    style="display:none"></button>
-    <button id="btnPause"          style="display:none"></button>
-    <button id="btnInGameMap"      style="display:none"></button>
-    <button id="btnInGameAchievements" style="display:none"></button>
-    <button id="btnInGameAlbum"    style="display:none"></button>
-    <button id="btnInGameStats"    style="display:none"></button>
-    <button id="btnInGameOptions"  style="display:none"></button>
-    <button id="btnInGameHow"      style="display:none"></button>
-    <button id="btnRestartLevel"   style="display:none"></button>
-    <button id="btnGoToLevel"      style="display:none"></button>
-    <button id="btnRestartGame"    style="display:none"></button>
-  </div>
-
-  <!-- MENU SUSPENSO — acessível durante o jogo via botão ☰ -->
-  <div id="teacherMenuPanel">
-    <p class="tmenu-section">📋 Ver</p>
-    <button id="mBtnMap"          class="btn">🗺️ Mapa da Aventura</button>
-    <button id="mBtnAchievements" class="btn">🏆 Conquistas</button>
-    <button id="mBtnAlbum"        class="btn">📖 Álbum dos Direitos</button>
-    <button id="mBtnStats"        class="btn">📊 Estatísticas</button>
-    <button id="mBtnErrors"       class="btn">🧠 Rever Erros</button>
-    <button id="mBtnCertificate"  class="btn">🏅 Certificado</button>
-    <button id="mBtnHow"          class="btn">❓ Como Jogar</button>
-
-    <p class="tmenu-section">⚙️ Jogo</p>
-    <button id="mBtnPause"        class="btn">⏸ Pausa / Continuar</button>
-    <button id="mBtnOptions"      class="btn">⚙️ Opções</button>
-    <button id="mBtnFullscreen"   class="btn">⛶ Ecrã todo</button>
-    <button id="mBtnTouch"        class="btn">📱 Botões tácteis</button>
-
-    <p class="tmenu-section">🔄 Nível</p>
-    <button id="mBtnLevel"        class="btn">🔄 Reiniciar este nível</button>
-    <button id="mBtnGoToLevel"    class="btn">🎯 Ir para nível…</button>
-    <button id="mBtnRestart"      class="btn">🔁 Recomeçar do início</button>
-
-    <p class="tmenu-section">🚪 Sair</p>
-    <button id="mBtnExit"         class="btn tmenu-exit-btn">🚪 Menu Inicial</button>
-  </div>
-
-  <!-- ═══════════════════════════════════════════
-       MODAL HISTÓRIA (entre níveis)
-  ═══════════════════════════════════════════ -->
-  <div id="historyOverlay" class="overlay hidden">
-    <div class="card history-card">
-      <div class="history-header">
-        <span class="history-icon">🎈</span>
-        <div>
-          <h2>O Dia da Criança</h2>
-          <p class="history-subtitle">Sabias que…?</p>
-        </div>
-      </div>
-      <p id="historyText" class="history-text"></p>
-      <div class="row">
-        <button id="btnHistory" class="btn primary">Continuar ▶</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════
-       GAME OVER
-  ═══════════════════════════════════════════ -->
-  <div id="gameOverOverlay" class="overlay hidden">
-    <div class="card gameover-card">
-      <h2>Missão Falhada!</h2>
-      <div class="gameover-robot-stage" aria-hidden="true">
-        <div class="gameover-tears">💧&nbsp;💧</div>
-        <img class="gameover-robot-img" src="vanberto_real.png" alt="" />
-        <div class="gameover-robot-shadow"></div>
-      </div>
-      <p class="sub">Ficaste sem vidas! A internet precisa de ti — não desistas!</p>
-      <button id="btnReviewModeGO" class="btn" style="display:none;width:100%;margin-bottom:10px;">📋 Ver erros</button>
-      <div class="row">
-        <button id="btnRetry" class="btn primary">🔄 Tentar de novo</button>
-        <button id="btnExit" class="btn">🏠 Menu</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════
-       VITÓRIA FINAL
-  ═══════════════════════════════════════════ -->
-  <div id="winOverlay" class="overlay hidden" role="dialog" aria-modal="true">
-    <div class="card win-card">
-      <div class="win-icon">🏆</div>
-      <h2>Missão Concluída!</h2>
-      <p class="win-name">Parabéns, <span id="winPlayerName">Herói das Crianças</span>!</p>
-
-      <div class="win-robot-stage" aria-hidden="true">
-        <img class="win-robot-img" src="vanberto_real.png" alt="VanBerto's" />
-        <div class="win-robot-shadow"></div>
-        <div class="win-robot-notes">🎵<span>🎶</span>🎵</div>
-      </div>
-
-      <div class="win-stats">
-        <div class="win-stat">⭐ <strong id="winScore">0</strong> pontos</div>
-        <div class="win-stat">✅ Respostas certas: <strong id="winPct">—</strong></div>
-        <div class="win-stat win-medal" id="winMedal">🥇 Excelente!</div>
-      </div>
-
-      <!-- TABS -->
-      <div id="winTabs" class="win-tabs">
-        <button class="win-tab active" data-panel="winPanelReport">📋 Relatório</button>
-        <button class="win-tab" data-panel="winPanelRights">🏅 Direitos</button>
-      </div>
-      <!-- PAINEL RELATÓRIO -->
-      <div id="winPanelReport" class="win-panel active">
-        <div id="winThemeErrors" style="display:none;margin:10px 0;">
-          <p style="font-weight:700;font-size:12px;color: #1e1b4b;margin:0 0 6px;">📊 Erros por tema</p>
-          <table id="winThemeTable" style="width:100%;border-collapse:collapse;font-size:11px;color: #1e1b4b;"></table>
-        </div>
-        <button id="btnReviewMode" class="btn" style="display:none;margin-top:6px;">📋 Ver erros</button>
-      </div>
-      <!-- PAINEL COMPETÊNCIAS CONQUISTADAS -->
-      <div id="winPanelRights" class="win-panel">
-        <p style="font-size:11px;color: #3730a3;margin:4px 0 8px;text-align:center;">🏅 Os 20 Direitos que recuperaste</p>
-        <div id="winRightsGrid" class="win-rights-grid"></div>
-      </div>
-      <!-- BOTÕES -->
-      <div class="row" style="margin-top:12px;">
-        <button id="btnWinRestart" class="btn">🔄 Jogar de novo</button>
-        <button id="btnWinCertificate" class="btn primary">🎓 Certificado</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════
-       PAUSA — overlay informativo
-  ═══════════════════════════════════════════ -->
-  <div id="pauseInfoOverlay" class="hidden">
-    <div class="pause-card">
-      <p class="pause-title"><span>⏸</span> PAUSA</p>
-      <div class="pause-robot-wrap" aria-hidden="true">
-        <img class="pause-robot-img" src="vanberto_real.png" alt="" />
-      </div>
-      <div class="pause-info-grid">
-        <div class="pause-info-box">
-          <strong>🎮 Nível</strong>
-          <span class="pause-info-val" id="pauseLevel">—</span>
-        </div>
-        <div class="pause-info-box">
-          <strong>⭐ Pontos</strong>
-          <span class="pause-info-val" id="pauseScore">0</span>
-        </div>
-        <div class="pause-info-box">
-          <strong>❤️ Vidas</strong>
-          <span class="pause-info-val" id="pauseLives">3</span>
-        </div>
-        <div class="pause-info-box">
-          <strong>🏁 Progresso</strong>
-          <span class="pause-info-val" id="pauseProgress">—</span>
-        </div>
-      </div>
-      <div class="pause-tip" id="pauseTip">
-        💡 <b>Dica:</b> Apanha a estrela ⭐ para ativar o <b>Star Power</b> e atropelar vilões durante 8 segundos!
-      </div>
-      <p class="pause-controls-hint">← → andar &nbsp;|&nbsp; ↑ / Espaço saltar &nbsp;|&nbsp; ↓ / S agachar &nbsp;|&nbsp; Prima ▶ Continuar para retomar</p>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════
-       TRANSIÇÃO DE NÍVEL
-  ═══════════════════════════════════════════ -->
-  <div id="levelTransitionOverlay" aria-hidden="true" style="
-    display:none; position:fixed; inset:0; z-index:9000;
-    align-items:center; justify-content:center;
-    pointer-events:auto;
-  ">
-    <div id="levelTransitionPanel" style="
-      background: rgba(255,232,232,0.42);
-      border: 2px solid rgba(30,27,75,0.25);
-      border-radius:18px;
-      padding:32px 40px;
-      text-align:center;
-      min-width:320px; max-width:88vw;
-      font-family:'Baloo 2',sans-serif;
-    ">
-      <p id="ltNum"    style="margin:0 0 6px;font-size:15px;font-weight:800;letter-spacing:1px;opacity:0.85;"></p>
-      <p id="ltTitle"  style="margin:0 0 14px;font-size:32px;font-weight:900;line-height:1.2;text-shadow: none;"></p>
-      <p id="ltPhrase" style="margin:0 0 16px;font-size:20px;font-weight:800;opacity:0.95;"></p>
-      <p id="ltName"   style="margin:0 0 20px;font-size:17px;font-weight:900;opacity:0.90;"></p>
-      <p id="ltTap"    style="margin:0;font-size:13px;font-weight:700;opacity:0.55;letter-spacing:0.5px;">toca para continuar ▶</p>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════
-       ARTEFACTO DESBLOQUEADO — popup épico
-  ═══════════════════════════════════════════ -->
-  <!-- ═══════════════════════════════════════════
-       NÍVEL CONCLUÍDO — celebração, antes da revelação do artefacto
-  ═══════════════════════════════════════════ -->
-  <div id="levelCompleteOverlay" aria-hidden="true">
-    <div id="levelCompletePanel">
-      <div id="lcConfettiLayer" class="lc-confetti-layer"></div>
-      <img id="lcVanberto" class="lc-vanberto" src="vanberto_real.png" alt="" />
-      <p id="lcTitle" class="lc-title">Conseguiste!</p>
-      <p id="lcLevelName" class="lc-level-name">Nível 1 — O Portal da Identidade</p>
-      <div id="lcStars" class="lc-stars">
-        <div class="lc-star-item">
-          <span class="lc-star" data-i="0">★</span>
-          <span class="lc-star-label" data-label-i="0"></span>
-        </div>
-        <div class="lc-star-item">
-          <span class="lc-star" data-i="1">★</span>
-          <span class="lc-star-label" data-label-i="1"></span>
-        </div>
-        <div class="lc-star-item">
-          <span class="lc-star" data-i="2">★</span>
-          <span class="lc-star-label" data-label-i="2"></span>
-        </div>
-      </div>
-      <p id="lcUnlock" class="lc-unlock" style="display:none"></p>
-      <button id="lcContinue" class="lc-continue-btn">Continuar ▶</button>
-    </div>
-  </div>
-
-  <div id="artefactRevealOverlay" aria-hidden="true">
-    <div id="artefactRevealPanel">
-      <p class="ar-label">✨ Direito Recuperado! ✨</p>
-      <div id="arRevParticles" class="ar-particles"></div>
-      <div id="arRevEmoji"  class="ar-emoji">🛡️</div>
-      <p  id="arRevName"   class="ar-name">Nome do Artefacto</p>
-      <p  id="arRevShort"  class="ar-short">Direito</p>
-      <!-- Novos campos de enriquecimento -->
-      <div id="arRevArticle" class="ar-article" style="display:none"></div>
-      <div id="arRevCurio"   class="ar-curio"   style="display:none"></div>
-      <div id="arRevStats"   class="ar-stats"   style="display:none"></div>
-      <p  id="arRevSpeech" class="ar-speech">"Fala do VanBerto!"</p>
-      <button id="arRevClose" class="ar-close-btn">Continuar ▶</button>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════
-       BÓNUS DE CONJUNTO
-  ═══════════════════════════════════════════ -->
-  <div id="setBonusOverlay" aria-hidden="true">
-    <div id="setBonusPanel">
-      <p id="sbIcon"  class="sb-icon">📜</p>
-      <p class="sb-label">Conjunto Completo!</p>
-      <p id="sbName"  class="sb-name">Nome do Conjunto</p>
-      <p id="sbBonus" class="sb-bonus">+150 pontos</p>
-      <p id="sbMsg"   class="sb-msg">Fantástico!</p>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════
-       GALERIA FINAL DE ARTEFACTOS
-  ═══════════════════════════════════════════ -->
-  <div id="artefactGalleryOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Galeria dos Direitos">
-    <div class="card ag-card">
-      <div class="card-seal" aria-hidden="true">🏆</div>
-      <h2>✨ Os teus Direitos Recuperados ✨</h2>
-      <p id="agPct" class="ag-pct">0/20 direitos recuperados</p>
-      <div id="agGrid" class="ag-grid"></div>
-      <div class="row">
-        <button id="btnAgContinue" class="btn primary">🏆 Ver resultado final ▶</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- CONFETIS + EFEITOS -->
-  <div id="confetti" class="confetti hidden" aria-hidden="true"></div>
-  <div id="celebrationBurst" class="celebration-burst hidden" aria-hidden="true"></div>
-
-  <!-- ═══════════════════════════════════════════
-       TOAST DE CONQUISTA
-  ═══════════════════════════════════════════ -->
-  <div id="achievementToastHost" class="achievement-toast-host" aria-live="polite"></div>
-
-  <!-- ═══════════════════════════════════════════
-       BOTÕES TOUCH
-  ═══════════════════════════════════════════ -->
-  <div id="touchControls">
-    <div class="tc-left">
-      <div class="tc-btn-wrap"><button id="btnLeft"  class="touch-btn" aria-label="Mover esquerda">◀</button><span class="tc-label">Esq</span></div>
-      <div class="tc-btn-wrap"><button id="btnRight" class="touch-btn" aria-label="Mover direita">▶</button><span class="tc-label">Dir</span></div>
-    </div>
-    <div class="tc-right">
-      <div class="tc-btn-wrap"><button id="btnJump" class="touch-btn touch-jump" aria-label="Saltar">↑</button><span class="tc-label">Saltar</span></div>
-      <div class="tc-btn-wrap"><button id="btnCrouch" class="touch-btn touch-crouch" aria-label="Agachar">↓</button><span class="tc-label">Agachar</span></div>
-    </div>
-  </div>
-
-  <!-- INDICADOR DE ALTO CONTRASTE -->
-  <div id="hc-indicator" aria-live="polite">⬛ ALTO CONTRASTE ATIVO — prima H para desativar</div>
-
-  <div id="vbSpeech" aria-live="polite" aria-atomic="true">
-    <img id="vbSpeechAvatar" src="vanberto_real.png" alt="VanBerto's" />
-    <div id="vbSpeechBubble"><p id="vbSpeechText"></p><div id="vbSpeechTail"></div></div>
-  </div>
-
-  <!-- ═══════════════════════════════════════════
-       MODO REVISÃO
-  ═══════════════════════════════════════════ -->
-  <div id="reviewOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="Revisão das perguntas erradas">
-    <div class="card" style="max-height:88dvh;overflow-y:auto;padding:18px 20px;">
-      <h2 style="margin-bottom:4px;">📋 Modo Revisão</h2>
-      <p style="font-size:12px;color: #3730a3;margin:0 0 14px;font-style:italic;">As perguntas que erraste — com a resposta certa e a explicação completa.</p>
-      <div id="reviewList"></div>
-      <div class="row">
-        <button id="btnCloseReview" class="btn primary" style="width:100%;">✅ Entendido — fechar</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // Modo offline: o service worker (sw.js) guarda o jogo depois da 1.ª visita.
-    // Para o desligar num dispositivo: abrir o jogo com «?nosw» no endereço.
-    if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
-      if (/[?&]nosw\b/.test(location.search)) {
-        navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); });
-        caches.keys().then(function (ks) { ks.filter(function (k) { return k.indexOf("vanbertos-") === 0; }).forEach(function (k) { caches.delete(k); }); });
-      } else {
-        window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+  // peças fixas
+  for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++){
+    const c=board[y][x]; if(!c) continue;
+    if(clearing&&clearing.rows.includes(y)){
+      const p=Math.max(0,Math.min(1,clearing.t/CLEAR_MS*1.7-x/COLS*.7));
+      if(p>=1) continue;
+      /* fase 1: cresce e fica branco · fase 2: encolhe a brilhar e desaparece */
+      const up=p<.3, u=up?p/.3:(p-.3)/.7, sc=up?1+.2*u:1.2*(1-u*u);
+      if(sc<.15) continue;
+      ctx.save(); ctx.translate((x+.5)*CELL,(y+.5)*CELL);
+      ctx.shadowColor='rgba(255,255,255,.9)'; ctx.shadowBlur=up?14*u:14*(1-u);
+      ctx.globalAlpha=up?1:1-u*.5;
+      drawBlock(ctx,-CELL/2,-CELL/2,CELL,c,sc);
+      ctx.fillStyle='rgba(255,255,255,'+(up?.25+.7*u:.95*(1-u*.4))+')';
+      const s2=(CELL-4)*sc; rrVan(ctx,-s2/2,-s2/2,s2,s2,7*sc); ctx.fill();
+      ctx.restore();
+    } else drawBlock(ctx,x*CELL,(y-fallOff[y])*CELL,CELL,c);
+  }
+  // luz: relâmpago nas linhas completas, feixe que as varre e "bloom" a expandir
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  if(clearing){
+    const fl=clearing.hold>0?.8:Math.max(0,.8*(1-clearing.t/130)), bx=clearing.t/CLEAR_MS*(1.7/.7)*W;
+    for(const y of clearing.rows){
+      if(fl>0){ ctx.fillStyle='rgba(255,255,255,'+fl+')'; ctx.fillRect(0,y*CELL,W,CELL); }
+      if(clearing.hold<=0){
+        const g=ctx.createLinearGradient(bx-120,0,bx+20,0);
+        g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(.8,'rgba(255,255,255,.85)'); g.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.fillStyle=g; ctx.fillRect(0,y*CELL-4,W,CELL+8);
       }
     }
-  </script>
-  <script src="phaser.min.js?v=20261118dcc"></script>
-  <script type="module" src="dia-crianca.js?v=20261118dcc"></script>
+  }
+  for(const b of blooms){
+    const k=b.t/460, h=CELL*(1+k*3.2), a=.55*(1-k)*(1-k);
+    const g=ctx.createLinearGradient(0,b.y-h/2,0,b.y+h/2);
+    g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(.5,'rgba(255,255,255,'+a+')'); g.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=g; ctx.fillRect(0,b.y-h/2,W,h);
+  }
+  for(const r of rings){
+    if(r.t<=0) continue;
+    const k=r.t/r.max, rad=24+k*W*(r.n>=4?1.05:.78), a=.75*(1-k)*(1-k);
+    ctx.lineWidth=(r.n>=3?10:6)*(1-k)+1; ctx.strokeStyle='rgba(255,255,255,'+a+')';
+    ctx.beginPath(); ctx.ellipse(r.x,r.y,rad,rad*.3,0,0,Math.PI*2); ctx.stroke();
+    if(r.n>=4){ ctx.lineWidth=5*(1-k)+1; ctx.strokeStyle='rgba('+rgbs(themeCur.acc)+','+a+')'; ctx.beginPath(); ctx.ellipse(r.x,r.y,rad*.7,rad*.22,0,0,Math.PI*2); ctx.stroke(); }
+  }
+  ctx.restore();
+  // brilho ao encaixar
+  for(const f of flashes){
+    ctx.fillStyle='rgba(255,255,255,'+(.65*(1-f.t/220))+')';
+    for(const q of f.cells){ rrVan(ctx,q[0]*CELL+2,q[1]*CELL+2,CELL-4,CELL-4,7); ctx.fill(); }
+  }
+
+  if(piece&&running){
+    if(showGhost){
+      const gy=ghostY(), rgb=shades(piece.color).rgb.join(',');
+      piece.shape.forEach((r,y)=>r.forEach((v,x)=>{ if(v&&gy+y>=0){
+        rrVan(ctx,(piece.x+x)*CELL+3,(gy+y)*CELL+3,CELL-6,CELL-6,7);
+        ctx.fillStyle='rgba('+rgb+',.24)'; ctx.fill();
+        ctx.setLineDash([5,3]); ctx.lineWidth=2.2; ctx.strokeStyle='rgba('+rgb+',.95)'; ctx.stroke(); ctx.setLineDash([]);
+      }}));
+    }
+    // brilho suave à volta da peça
+    ctx.save(); ctx.shadowColor=piece.color; ctx.shadowBlur=14;
+    piece.shape.forEach((r,y)=>r.forEach((v,x)=>{ if(v&&piece.vy+y>-1) drawBlock(ctx,(piece.vx+x)*CELL,(piece.vy+y)*CELL,CELL,piece.color); }));
+    ctx.restore();
+  }
+
+  // partículas
+  for(const p of parts){
+    if(p.delay>0) continue;
+    const a=1-p.life/p.max, col='rgba('+p.rgb.join(',')+','+a+')';
+    ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot); ctx.fillStyle=col;
+    if(p.star){ ctx.fillStyle='rgba(255,240,190,'+a+')'; const s=p.s*1.3; ctx.beginPath(); ctx.moveTo(0,-s); ctx.lineTo(s*.35,-s*.35); ctx.lineTo(s,0); ctx.lineTo(s*.35,s*.35); ctx.lineTo(0,s); ctx.lineTo(-s*.35,s*.35); ctx.lineTo(-s,0); ctx.lineTo(-s*.35,-s*.35); ctx.closePath(); ctx.fill(); }
+    else ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s);
+    ctx.restore();
+  }
+  if(wellFlash>0){ ctx.fillStyle='rgba(255,255,255,'+wellFlash+')'; ctx.fillRect(0,0,W,H); }
+  // textos
+  ctx.textAlign='center'; ctx.lineJoin='round';
+  for(const q of pops){
+    const k=q.t/1100, a=k<.7?1:1-(k-.7)/.3, sc=k<.15?.6+k/.15*.5:1.1-Math.min(k,1)*.1;
+    ctx.save(); ctx.globalAlpha=a; ctx.translate(q.x,q.y-k*40); ctx.scale(sc,sc);
+    ctx.font=(q.size||(q.big?34:24))+"px 'Fredoka One','Baloo 2',system-ui,sans-serif";
+    ctx.lineWidth=q.size>40?8:6; ctx.strokeStyle='#2a0a4e'; ctx.strokeText(q.txt,0,0);
+    if(q.col==='rainbow'){ const rg=ctx.createLinearGradient(-130,0,130,0); ['#ff4d4d','#ffd93b','#7ae83a','#19d3ff','#b44cff'].forEach((c,i,a)=>rg.addColorStop(i/(a.length-1),c)); ctx.fillStyle=rg; }
+    else ctx.fillStyle=q.col||(q.big?'#ffd93b':'#fff8e0');
+    ctx.fillText(q.txt,0,0);
+    ctx.restore();
+  }
+  ctx.restore();
+
+  drawNext(); drawHud();
+  scoreEl.textContent=Math.round(dispScore); levelEl.textContent=level; linesEl.textContent=lines;
+  nextLevelEl.textContent=Math.max(0,level*POINTS_LEVEL-score); comboEl.textContent=combo;
+  { const sb=$('sBar'); if(sb) sb.style.width=Math.round(lvFrac()*100)+'%'; }
+}
+
+function drawMini(c,sh,color,cell,cx,cy,alpha){
+  const ox=cx-sh[0].length*cell/2, oy=cy-sh.length*cell/2;
+  c.save(); c.globalAlpha=alpha===undefined?1:alpha;
+  sh.forEach((r,y)=>r.forEach((v,x)=>{ if(v) drawBlock(c,Math.round(ox+x*cell),Math.round(oy+y*cell),cell,color); }));
+  c.restore();
+}
+function drawNext(){
+  nextCtx.clearRect(0,0,nextCv.width,nextCv.height);
+  if(queue[0]) drawMini(nextCtx,queue[0].shape,queue[0].color,24,75,42);
+  nextCtx.strokeStyle='rgba(236,30,121,.25)'; nextCtx.beginPath(); nextCtx.moveTo(14,86); nextCtx.lineTo(136,86); nextCtx.stroke();
+  if(queue[1]) drawMini(nextCtx,queue[1].shape,queue[1].color,17,38,118,.9);
+  if(queue[2]) drawMini(nextCtx,queue[2].shape,queue[2].color,17,112,118,.75);
+  holdCtx.clearRect(0,0,holdCv.width,holdCv.height);
+  if(held) drawMini(holdCtx,SHAPES[held],COLORS[held],18,75,32,canHold?1:.35);
+}
+
+/* ═══════════════ PERGUNTAS DE CIBERSEGURANÇA ═══════════════ */
+const QUIZ=[{"q":"A tua avó recebe um WhatsApp: «Olá mãe, mudei de número, guarda este.» Logo a seguir pedem-lhe dinheiro com urgência. O que deve ela fazer?","o":["Transferir já, deve ser alguém da família","Ligar para o número antigo ou falar com a pessoa antes de enviar dinheiro","Pedir mais detalhes por mensagem e depois transferir"],"a":1,"e":"É a burla do «Olá mãe, mudei de número»: fingem ser um familiar. Confirma sempre por outra via.","t":"Burlas em Portugal","l":"Enganar alguém para lhe ficar com o dinheiro pode ser crime de burla (Código Penal, art. 217.º)."},
+ {"q":"Chega um SMS: «A sua encomenda dos CTT está retida. Pague 1,99 € de taxa aqui.» Não esperavas nenhuma encomenda. O que fazes?","o":["Pago, é só 1,99 €","Não clico: só sigo encomendas nos canais oficiais dos CTT","Reencaminho a ligação aos amigos, para avisar"],"a":1,"e":"O valor pequeno é a isca: o objetivo é roubar os dados do teu cartão.","t":"Burlas em Portugal"},
+ {"q":"No Instagram, alguém vende bilhetes para um concerto esgotado a metade do preço. Só aceita MB WAY e tem muita pressa. O mais provável é…","o":["Uma sorte de principiante","Uma burla","Os preços baixam sempre antes do concerto"],"a":1,"e":"Bilhetes de eventos esgotados são uma isca clássica. Compra só em vendedores oficiais.","t":"Burlas em Portugal"},
+ {"q":"Uma página diz que um supermercado conhecido oferece um cheque de 500 € a quem partilhar e preencher um formulário. O que é?","o":["Um prémio verdadeiro, já partilharam mil pessoas","Uma burla para recolher dados pessoais","Um concurso aprovado pela Câmara"],"a":1,"e":"Sorteios falsos usam nomes de marcas conhecidas. Confirma sempre na página oficial da marca.","t":"Burlas em Portugal"},
+ {"q":"Alguém liga: «Somos do seu banco, detetámos movimentos suspeitos. Diga-nos o código que lhe enviámos por SMS.» O que fazes?","o":["Dou o código para proteger a conta","Desligo e ligo eu para o número que está atrás do cartão","Pergunto quanto dinheiro tenho na conta"],"a":1,"e":"Os bancos não pedem códigos nem PIN por telefone. Desliga e liga tu para o número oficial.","t":"Burlas em Portugal"},
+ {"q":"Um «investidor» no TikTok promete duplicar em 1 semana o dinheiro que lhe enviares. O que fazes?","o":["Envio 20 € só para experimentar","Desconfio: ninguém garante lucros rápidos e sem risco","Peço dinheiro emprestado para investir mais"],"a":1,"e":"Promessas de dinheiro fácil e rápido são o sinal número um de burla.","t":"Burlas em Portugal"},
+ {"q":"Vês um apartamento de férias no Algarve muito barato. O «dono» pede já um sinal por transferência e não deixa ver nem ligar. Isto é sinal de…","o":["Um negócio fantástico","Possível burla de alojamento falso","Simpatia do proprietário"],"a":1,"e":"Preço baixo, pressa e nenhum contacto real: confirma o alojamento por fontes oficiais antes de pagar.","t":"Burlas em Portugal"},
+ {"q":"Recebes um e-mail «das Finanças» a dizer que tens um reembolso de IRS e que deves clicar numa ligação para o receber. O que fazes?","o":["Clico, quero o dinheiro!","Não clico: entro no Portal das Finanças escrevendo eu o endereço","Respondo com o NIF e o IBAN"],"a":1,"e":"Falsos reembolsos são um clássico. Entra sempre nos sites oficiais pelo teu navegador.","t":"Burlas em Portugal"},
+ {"q":"Dizem-te que ganhaste um telemóvel e, para o receberes, pedem fotografias do Cartão de Cidadão e do cartão bancário. O que fazes?","o":["Envio, pode ser verdade","Recuso: nunca se enviam estas fotografias a desconhecidos","Envio só o Cartão de Cidadão"],"a":1,"e":"Com essas imagens podem pedir créditos ou abrir contas em teu nome.","t":"Burlas em Portugal","l":"Os teus dados pessoais estão protegidos pelo RGPD."},
+ {"q":"Vendes uma bicicleta no OLX. O «comprador» pede o teu telemóvel «para pagar por MB WAY». Para receberes dinheiro, o que tens de dar?","o":["O PIN do MB WAY, para ele confirmar","Só o teu número de telemóvel associado ao MB WAY","O código que chegou por SMS"],"a":1,"e":"Para receber dinheiro por MB WAY basta o teu número. Nunca precisas de PIN nem de códigos.","t":"MB WAY e dinheiro","l":"A PSP e o Banco de Portugal avisam: receber dinheiro por MB WAY nunca exige o teu PIN."},
+ {"q":"Esperas receber 85 € de uma venda, mas o telemóvel mostra um pedido para PAGARES 85 €. O que fazes?","o":["Aceito, deve ser engano da app","Recuso: quem recebe não paga, é uma burla","Aceito e depois peço o dinheiro de volta"],"a":1,"e":"Os burlões usam «Pedir dinheiro» em vez de «Enviar dinheiro». Lê sempre o ecrã antes de aceitar.","t":"MB WAY e dinheiro","l":"Alerta do Banco de Portugal sobre burlas em plataformas como o OLX e o Vinted."},
+ {"q":"Um desconhecido envia-te dinheiro «por engano» por MB WAY e pede que o devolvas já. O mais prudente é…","o":["Devolver já, para ser simpático","Falar primeiro com o teu banco","Gastar, porque o dinheiro já é teu"],"a":1,"e":"Pode fazer parte de uma burla. Não faças nada sem falares com o banco.","t":"MB WAY e dinheiro"},
+ {"q":"Vais criar o PIN do MB WAY. Qual é a melhor escolha?","o":["A minha data de nascimento","Um número que ninguém adivinha e que não partilho","O mesmo PIN do telemóvel do meu irmão"],"a":1,"e":"Evita datas e sequências óbvias, e nunca partilhes o PIN.","t":"MB WAY e dinheiro"},
+ {"q":"Perdeste o telemóvel com o MB WAY instalado. Qual é o primeiro passo?","o":["Esperar uns dias para ver se aparece","Contactar logo o banco para bloquear o MB WAY e os cartões","Mudar o fundo de ecrã"],"a":1,"e":"Quanto mais depressa bloqueares, menos risco corres.","t":"MB WAY e dinheiro"},
+ {"q":"Caíste numa burla e fizeste uma transferência. Qual é o melhor passo seguinte?","o":["Esconder, tenho vergonha","Contactar o banco de imediato e apresentar queixa","Esperar que o burlão devolva"],"a":1,"e":"Agir depressa aumenta a hipótese de travar o estrago. Guarda mensagens e comprovativos.","t":"MB WAY e dinheiro","l":"Podes apresentar queixa na PSP, na GNR ou na Polícia Judiciária."},
+ {"q":"Descobres a palavra-passe do Instagram de um colega e entras na conta dele «só para ver». Em Portugal, isto…","o":["É só uma brincadeira","Pode ser crime de acesso ilegítimo","Só é crime se fores adulto"],"a":1,"e":"Entrar na conta de alguém sem autorização não é brincadeira.","t":"A lei e tu","l":"Lei do Cibercrime (Lei n.º 109/2009), art. 6.º: acesso ilegítimo."},
+ {"q":"Tens 14 anos e partilhas no grupo da turma um vídeo de um colega a cair, contra a vontade dele. Em Portugal, o que pode acontecer?","o":["Nada, ainda és menor","Pode dar lugar a medidas tutelares educativas","Vais para a prisão como um adulto"],"a":1,"e":"Abaixo dos 16 anos não se é julgado como adulto, mas dos 12 aos 16 aplica-se a Lei Tutelar Educativa.","t":"A lei e tu","l":"Código Penal, art. 199.º (fotografias e gravações ilícitas) e Lei Tutelar Educativa."},
+ {"q":"Tiras uma fotografia a um colega contra a vontade dele, mas não a publicas. Em Portugal, isto…","o":["Nunca é um problema","Pode ser crime","Só é problema se a venderes"],"a":1,"e":"Fotografar ou filmar alguém contra a vontade dessa pessoa pode ser crime, mesmo sem publicar.","t":"A lei e tu","l":"Código Penal, art. 199.º: pena de prisão até 1 ano ou multa até 240 dias."},
+ {"q":"Gravaste uma conversa com um colega sem ele saber e queres mostrá-la à turma. Em Portugal…","o":["Podes, a gravação é tua","Gravar e usar a voz de alguém sem consentimento pode ser crime","Só é crime se o telemóvel for dele"],"a":1,"e":"A privacidade das conversas também é protegida pela lei.","t":"A lei e tu","l":"Código Penal, art. 199.º (gravações ilícitas)."},
+ {"q":"Chamas nomes feios a um colega num grupo de WhatsApp com 30 pessoas. Em Portugal, ofender assim alguém pode ser…","o":["Liberdade de expressão, nunca é crime","Crime de injúria ou de difamação","Só falta de educação"],"a":1,"e":"Insultar e espalhar mentiras sobre alguém pode ser crime, mesmo online.","t":"A lei e tu","l":"Código Penal, art. 180.º (difamação) e art. 181.º (injúria)."},
+ {"q":"Um colega envia-te mensagens a dizer que te vai bater se fores à escola amanhã. Isto pode ser…","o":["Só uma piada","Crime de ameaça","Normal entre colegas"],"a":1,"e":"Ameaçar alguém com violência é grave. Guarda as mensagens e conta a um adulto.","t":"A lei e tu","l":"Código Penal, art. 153.º (ameaça)."},
+ {"q":"Descarregas de graça, num site pirata, um filme que acabou de estrear. Em Portugal, isso…","o":["É sempre permitido","Viola direitos de autor e pode trazer vírus","Só é ilegal se pagares"],"a":1,"e":"Quem cria filmes e música tem direitos. Os sites piratas escondem muitas vezes vírus.","t":"A lei e tu","l":"Código do Direito de Autor e dos Direitos Conexos."},
+ {"q":"Entras sem autorização na rede da escola para ver os testes antes da hora, sem alterar nada. Isto é…","o":["Uma proeza inofensiva","Acesso ilegítimo a um sistema informático","Permitido, se não mudares nada"],"a":1,"e":"Mesmo sem estragar nada, entrar onde não tens autorização pode ser crime.","t":"A lei e tu","l":"Lei do Cibercrime (Lei n.º 109/2009), art. 6.º."},
+ {"q":"A partir de que idade se pode ser responsabilizado criminalmente como um adulto, em Portugal?","o":["12 anos","16 anos","18 anos"],"a":1,"e":"Abaixo dos 16 anos não se é julgado como adulto. Dos 12 aos 16 aplica-se a Lei Tutelar Educativa.","t":"A lei e tu","l":"Código Penal, art. 19.º: os menores de 16 anos são inimputáveis."},
+ {"q":"Partilhas no grupo da turma uma fotografia íntima de uma colega que ela enviou só a ti. Isto é…","o":["Seguro, foi ela que ta enviou","Muito grave e pode ser crime","Só é grave se ela descobrir"],"a":1,"e":"Partilhar imagens íntimas de alguém destrói vidas. Quem partilha é que faz mal, nunca quem as enviou.","t":"A lei e tu","l":"Código Penal, art. 199.º e, quando há menores, art. 176.º (pornografia de menores)."},
+ {"q":"Uma app guardou fotografias tuas e já não queres que as tenha. Ao abrigo do RGPD, podes…","o":["Nada, ficam lá para sempre","Pedir o apagamento dos teus dados","Pagar para as apagarem"],"a":1,"e":"O RGPD dá-te direitos: ver, corrigir e pedir o apagamento dos teus dados pessoais.","t":"A lei e tu","l":"RGPD, art. 17.º (direito ao apagamento)."},
+ {"q":"Se achas que uma empresa não trata bem os teus dados pessoais, em Portugal podes queixar-te à…","o":["CNPD (Comissão Nacional de Proteção de Dados)","Liga Portuguesa de Futebol","Direção-Geral das Artes"],"a":0,"e":"A CNPD é a autoridade que fiscaliza a proteção de dados em Portugal.","t":"A lei e tu"},
+ {"q":"Criar um vírus para estragar os ficheiros de outra pessoa pode ser punido, em Portugal, como…","o":["Dano informático (Lei do Cibercrime)","Excesso de velocidade","Nada, se o vírus for pequeno"],"a":0,"e":"Estragar dados ou programas de outras pessoas é crime, mesmo que seja «só um bocadinho».","t":"A lei e tu","l":"Lei do Cibercrime (Lei n.º 109/2009), art. 4.º."},
+ {"q":"Instalas uma app no telemóvel de um colega para ler em segredo as mensagens dele. Isto…","o":["É só curiosidade","Pode ser crime","Só é crime se fores adulto"],"a":1,"e":"Espiar as mensagens de alguém invade a sua vida privada.","t":"A lei e tu","l":"Lei do Cibercrime (Lei n.º 109/2009), arts. 6.º e 7.º."},
+ {"q":"O e-mail «dos CTT» vem de ctt-encomendas@gmail.com. Uma grande empresa a sério usaria…","o":["O seu próprio domínio, e não um endereço gratuito","Qualquer endereço serve","Só letras minúsculas"],"a":0,"e":"Grandes empresas usam o seu endereço oficial. Um endereço gratuito é sinal de alerta.","t":"Phishing"},
+ {"q":"O «site do banco» tem o endereço banc0-seguro.net (com zero em vez de «o»). O que significa?","o":["É só um erro de escrita","É um site falso a imitar o verdadeiro","É a versão para telemóvel"],"a":1,"e":"Letras trocadas por números são um truque para enganar o olho.","t":"Phishing"},
+ {"q":"O phishing por SMS chama-se «smishing». E por chamada telefónica?","o":["Vishing","Fishing","Hashing"],"a":0,"e":"«Vishing» vem de «voice» (voz): burlões que ligam a fingir que são do banco ou da polícia.","t":"Phishing"},
+ {"q":"Clicaste numa ligação suspeita e escreveste lá a palavra-passe. O que fazes primeiro?","o":["Mudo logo essa palavra-passe e aviso um adulto","Espero para ver o que acontece","Apago a app e esqueço o assunto"],"a":0,"e":"Todos podemos errar. O importante é agir depressa e pedir ajuda.","t":"Phishing"},
+ {"q":"Um e-mail do «professor» traz um anexo estranho e erros de português. O que fazes?","o":["Abro, pode ser um teste surpresa","Não abro e confirmo com o professor pessoalmente","Reencaminho à turma toda"],"a":1,"e":"Anexos inesperados podem esconder vírus. Confirma por outra via.","t":"Phishing"},
+ {"q":"Qual é um sinal típico de mensagem de phishing?","o":["Cria pressa e ameaça fechar a tua conta","Tem o teu nome","Chegou de manhã"],"a":0,"e":"Os burlões criam pressa para não teres tempo de pensar.","t":"Phishing"},
+ {"q":"Qual destas palavras-passe é a mais forte?","o":["futebol2010","S3mpre-a-Cantar-no-Duche!","12345678"],"a":1,"e":"Uma frase longa, com símbolos e números, vale mais do que uma palavra simples.","t":"Palavras-passe"},
+ {"q":"O teu melhor amigo pede-te a palavra-passe do jogo «para te ajudar a subir de nível». O que fazes?","o":["Dou, é meu amigo","Não dou: posso ajudar a jogar sem partilhar a palavra-passe","Dou só uma parte"],"a":1,"e":"A palavra-passe é só tua. Se a contas, a conta deixa de ser só tua.","t":"Palavras-passe"},
+ {"q":"Onde NÃO deves escrever a tua palavra-passe?","o":["Num papel colado ao portátil, à vista de todos","No campo de palavra-passe do site oficial","Num gestor de palavras-passe"],"a":0,"e":"Quem passar vê. Se precisares, guarda-as num gestor de palavras-passe.","t":"Palavras-passe"},
+ {"q":"A autenticação em dois passos serve para…","o":["Teres duas contas iguais","Pedir uma segunda prova, além da palavra-passe","Mudares a palavra-passe duas vezes"],"a":1,"e":"Mesmo que roubem a palavra-passe, falta a segunda confirmação.","t":"Palavras-passe"},
+ {"q":"Usaste a mesma palavra-passe em 5 sites e um deles foi invadido. O que deves fazer?","o":["Nada, os outros estão bem","Mudar a palavra-passe em todos, com palavras-passe diferentes","Esperar um mês"],"a":1,"e":"Os piratas experimentam a mesma palavra-passe noutros sites.","t":"Palavras-passe"},
+ {"q":"Num computador partilhado da escola, o melhor é…","o":["Guardar a palavra-passe no navegador, é mais fácil","Não guardar e terminar sempre a sessão","Dizer aos colegas para usarem a minha conta"],"a":1,"e":"Quem usar o computador a seguir pode entrar nas tuas contas.","t":"Palavras-passe"},
+ {"q":"A Chave Móvel Digital serve para te identificares online nos serviços do Estado. O PIN dela é…","o":["Para dar a quem pedir ajuda","Pessoal e secreto, como o PIN do cartão do banco","Igual ao número do Cartão de Cidadão"],"a":1,"e":"Quem tiver o PIN pode fazer-se passar por ti.","t":"Palavras-passe"},
+ {"q":"Num vídeo teu no TikTok vê-se a tua camisola da escola e a tua casa ao fundo. O que podes estar a revelar?","o":["Nada importante","Onde estudas e onde moras","A tua cor favorita"],"a":1,"e":"Pequenos pormenores juntos mostram muito sobre ti.","t":"Privacidade e RGPD"},
+ {"q":"Um jogo pede acesso à localização, aos contactos e ao microfone. O mais sensato é…","o":["Aceitar tudo","Dar só as permissões de que o jogo precisa","Desinstalar o telemóvel"],"a":1,"e":"Pergunta-te: este jogo precisa mesmo disto para funcionar?","t":"Privacidade e RGPD"},
+ {"q":"Um site pede-te o NIF, a morada e o Cartão de Cidadão só para veres um vídeo. O que fazes?","o":["Dou tudo, é rápido","Desconfio: só devem pedir os dados de que precisam","Dou só o NIF"],"a":1,"e":"Pedir mais dados do que o necessário é um mau sinal.","t":"Privacidade e RGPD","l":"RGPD: as entidades só podem pedir os dados necessários (minimização)."},
+ {"q":"Antes de publicares uma fotografia de grupo da turma, o que deves fazer?","o":["Perguntar a quem aparece se concorda","Publicar já, para ter gostos","Marcar toda a gente sem avisar"],"a":0,"e":"Cada pessoa decide se aparece nas fotografias.","t":"Privacidade e RGPD","l":"Código Civil, art. 79.º: o retrato de uma pessoa não pode ser divulgado sem o seu consentimento."},
+ {"q":"Ter a localização em tempo real ligada nas redes sociais pode…","o":["Mostrar onde estás neste momento","Poupar bateria","Melhorar as fotografias"],"a":0,"e":"Desliga a localização nas publicações. Nem toda a gente que te segue é de confiança.","t":"Privacidade e RGPD"},
+ {"q":"O que acontece ao que publicas na internet?","o":["Desaparece passado um dia","Pode ser guardado e copiado, mesmo que apagues","Só tu o podes ver"],"a":1,"e":"Pensa antes de publicar: na internet, quase nada se apaga por completo.","t":"Privacidade e RGPD"},
+ {"q":"Uma conta com foto de adolescente pede-te amizade e já sabe o nome da tua escola. O que fazes?","o":["Aceito, parece da minha idade","Bloqueio e conto a um adulto: pode não ser quem diz","Respondo a perguntar quem é"],"a":1,"e":"Qualquer pessoa pode usar fotos falsas.","t":"Redes sociais"},
+ {"q":"Um «influencer» diz: «Clica já e ganha 1000 € por dia a partir de casa.» Antes de acreditares, o que fazes?","o":["Pesquiso e desconfio de promessas fáceis de dinheiro","Partilho com os amigos","Envio já os meus dados"],"a":0,"e":"Se fosse assim tão fácil, toda a gente já estava rica.","t":"Redes sociais"},
+ {"q":"No grupo da turma alguém começa a partilhar fotografias de um colega para gozar. A melhor reação é…","o":["Pôr emojis a rir","Não reencaminhar, falar com um professor e apoiar o colega","Guardar as fotografias"],"a":1,"e":"Quem partilha também faz parte do problema.","t":"Redes sociais"},
+ {"q":"Os teus seguidores perguntam onde moras. A resposta mais segura é…","o":["A morada completa, são só seguidores","Não digo: não partilho a minha morada online","Só o nome da rua"],"a":1,"e":"Não precisas de dizer onde moras a ninguém online.","t":"Redes sociais"},
+ {"q":"Um desafio perigoso do TikTok anda a espalhar-se na escola. O que fazes?","o":["Participo, para não ficar de fora","Não participo e aviso um adulto","Dou gostos mas não participo"],"a":1,"e":"Desafios perigosos já causaram acidentes graves. Ser corajoso é dizer não.","t":"Redes sociais"},
+ {"q":"Alguém no Instagram diz que é do apoio à conta e pede o teu código de login. O que fazes?","o":["Dou, quero a conta segura","Não dou: o apoio verdadeiro nunca pede códigos","Dou metade do código"],"a":1,"e":"Códigos de verificação são só teus. Nunca os dês.","t":"Redes sociais"},
+ {"q":"Alguém criou um perfil falso com o teu nome e as tuas fotografias para gozar contigo. O que fazes?","o":["Ignoro e escondo de toda a gente","Guardo provas, denuncio o perfil e conto a um adulto","Faço um perfil falso dele também"],"a":1,"e":"Capturas de ecrã e uma denúncia ajudam a resolver o problema.","t":"Ciberbullying","l":"A Linha Internet Segura (800 21 90 90) dá apoio gratuito e confidencial."},
+ {"q":"O ciberbullying só acontece na escola?","o":["Sim, só durante as aulas","Não, pode acontecer a qualquer hora, por isso falar é tão importante","Só ao fim de semana"],"a":1,"e":"Está no telemóvel, por isso pode seguir-te para casa. Há sempre ajuda.","t":"Ciberbullying","l":"Linha Internet Segura: 800 21 90 90 (gratuita e confidencial)."},
+ {"q":"Um amigo está triste por causa de mensagens maldosas. Como o podes ajudar?","o":["Dizer-lhe para ignorar e esquecer","Ouvi-lo, ficar do lado dele e ajudá-lo a contar a um adulto","Gozar também, para ele se habituar"],"a":1,"e":"Um amigo a ouvir faz a diferença.","t":"Ciberbullying"},
+ {"q":"Se «gostares» ou partilhares uma publicação que humilha alguém…","o":["Ajudas a magoar mais a pessoa","Não faz diferença","Mostras que és divertido"],"a":0,"e":"Cada partilha aumenta o alcance da humilhação.","t":"Ciberbullying"},
+ {"q":"Há uma linha gratuita em Portugal para crianças e jovens que precisam de ajuda. Qual é o número?","o":["116 111 (SOS Criança)","808 24 24 24","1234"],"a":0,"e":"A Linha SOS Criança é gratuita e confidencial.","t":"Pedir ajuda","l":"SOS Criança, do Instituto de Apoio à Criança: 116 111."},
+ {"q":"Se alguém estiver em perigo imediato, qual é o número de emergência em Portugal?","o":["112","116 006","800 21 90 90"],"a":0,"e":"112 é para emergências. 116 006 é o apoio à vítima e 800 21 90 90 é a Linha Internet Segura.","t":"Pedir ajuda"},
+ {"q":"A APAV (Associação Portuguesa de Apoio à Vítima) tem uma linha de apoio a quem foi vítima de crime. O número é…","o":["116 006","112","144"],"a":0,"e":"O apoio da APAV é gratuito e confidencial.","t":"Pedir ajuda","l":"Linha de Apoio à Vítima da APAV: 116 006."},
+ {"q":"Quando algo corre mal online, qual é a melhor atitude?","o":["Contar logo a um adulto de confiança","Esperar que passe","Apagar tudo e não dizer nada"],"a":0,"e":"Pedir ajuda é de quem é esperto. Quanto mais cedo, melhor.","t":"Pedir ajuda"},
+ {"q":"Quem pode denunciar conteúdos ilegais na internet, em Portugal?","o":["Qualquer pessoa, por exemplo através da Linha Internet Segura","Só a polícia","Só um advogado"],"a":0,"e":"Todos podemos ajudar a tornar a internet mais segura.","t":"Pedir ajuda","l":"Linha Internet Segura: 800 21 90 90."},
+ {"q":"Deixas o telemóvel desbloqueado na mesa do café. O que pode acontecer?","o":["Nada, ninguém repara","Alguém pode ver ou usar as tuas contas","O telemóvel carrega-se sozinho"],"a":1,"e":"Usa sempre bloqueio com PIN ou impressão digital.","t":"Telemóvel e dispositivos"},
+ {"q":"O que é o IMEI do telemóvel?","o":["O código único do aparelho, útil se for roubado","O número da tua casa","A palavra-passe do Wi-Fi"],"a":0,"e":"Escreve *#06# no teclado do telefone para o ver e guarda-o.","t":"Telemóvel e dispositivos","l":"Se te roubarem o telemóvel, avisa o operador e apresenta queixa."},
+ {"q":"Estás num café com Wi-Fi grátis chamado «Cafe_Free_WiFi_2». Para ires ao banco online…","o":["Uso os dados móveis em vez dessa rede","Uso essa rede, é grátis","Peço ao vizinho que entre por mim"],"a":0,"e":"Redes abertas podem ser espiadas. Para o banco, usa os dados móveis.","t":"Telemóvel e dispositivos"},
+ {"q":"Antes de ofereceres o teu telemóvel antigo, deves…","o":["Fazer reposição de fábrica e remover as contas","Só desligá-lo","Colar uma etiqueta"],"a":0,"e":"Senão, quem o receber pode ver as tuas fotos e mensagens.","t":"Telemóvel e dispositivos"},
+ {"q":"Uma pessoa desconhecida oferece-se para carregar o teu telemóvel «ligado ao computador dela». O mais seguro é…","o":["Recusar e carregar só com o teu carregador numa tomada","Aceitar, é rápido","Dar também o PIN"],"a":0,"e":"Ligar o telemóvel a aparelhos desconhecidos pode pôr os teus dados em risco.","t":"Telemóvel e dispositivos"},
+ {"q":"Uma mensagem diz «a tua app precisa de atualização, clica aqui». Como atualizas as apps com segurança?","o":["Pela loja oficial (Google Play ou App Store)","Por uma ligação de SMS","Num site que prometa apps grátis"],"a":0,"e":"As lojas oficiais verificam as apps.","t":"Telemóvel e dispositivos"},
+ {"q":"Compraste umas sapatilhas online e não gostaste. Em Portugal, podes devolvê-las sem dar explicações em…","o":["14 dias","24 horas","6 meses"],"a":0,"e":"É o direito de livre resolução: 14 dias depois de receberes. Há exceções, como produtos feitos por medida.","t":"Compras online","l":"Decreto-Lei n.º 24/2014."},
+ {"q":"A loja online não resolve o teu problema. Podes fazer uma reclamação através do…","o":["Livro de Reclamações Eletrónico","Livro de Receitas","Livro de Ponto"],"a":0,"e":"É gratuito. Nem todas as lojas estrangeiras estão abrangidas, por isso confirma antes de comprar.","t":"Compras online","l":"Muitas empresas em Portugal têm de disponibilizar o Livro de Reclamações."},
+ {"q":"Antes de comprares num site que não conheces, o que verificas?","o":["Contactos, morada, condições de devolução e opiniões fora do site","Só se o preço é baixo","Se tem muitas cores"],"a":0,"e":"Sites sérios mostram quem são e como podes falar com eles.","t":"Compras online"},
+ {"q":"Uma «loja» só aceita transferência para uma conta de pessoa particular e não mostra morada. Isto é sinal de…","o":["Confiança","Burla provável","Pagamento mais rápido"],"a":1,"e":"Lojas a sério identificam-se e têm formas de pagamento seguras.","t":"Compras online"},
+ {"q":"No Roblox, alguém diz que te dá skins grátis se fizeres login com a tua conta num site. Isto é…","o":["Uma prenda","Uma burla para roubar a tua conta","Uma regra do jogo"],"a":1,"e":"Sites a pedir o teu login «para ofertas» são armadilhas.","t":"Jogos online"},
+ {"q":"Alguém no chat do jogo pede o teu número para continuarem a falar no WhatsApp. O que fazes?","o":["Dou, parece simpático","Recuso e, se insistir, bloqueio e conto a um adulto","Dou o número do meu irmão"],"a":1,"e":"Não dês contactos a quem só conheces do jogo.","t":"Jogos online"},
+ {"q":"O jogo tem «caixas de recompensa» pagas, onde pagas sem saber o que sai. O que deves fazer?","o":["Gastar o que tiver","Falar com um adulto antes de gastar dinheiro real","Usar o cartão dos pais às escondidas"],"a":1,"e":"Gastos pequenos somam-se depressa. Combina regras em casa.","t":"Jogos online"},
+ {"q":"No chat de voz, alguém ofende-te. O melhor é…","o":["Responder a gritar","Silenciar, denunciar o jogador e continuar com os amigos","Combinar encontrar-te com ele"],"a":1,"e":"Silenciar e denunciar protege-te a ti e aos outros jogadores.","t":"Jogos online"},
+ {"q":"Uma notícia diz que «amanhã não há aulas em todo o país» e vem de uma página que ninguém conhece. O que fazes?","o":["Partilho já","Verifico no site da escola ou do Ministério da Educação","Acredito porque tem muitos gostos"],"a":1,"e":"Confirma sempre na fonte oficial antes de partilhar.","t":"Notícias falsas e IA"},
+ {"q":"Um vídeo mostra uma figura pública a dizer uma coisa absurda, mas a voz soa estranha. Hoje isso pode ser…","o":["Sempre verdade","Um deepfake criado com inteligência artificial","Um erro da internet"],"a":1,"e":"Vozes e vídeos podem ser falsificados. Procura a fonte original.","t":"Notícias falsas e IA"},
+ {"q":"Uma fotografia «de ontem» mostra uma inundação, mas é de há 5 anos noutro país. Como podes descobrir?","o":["Fazendo uma pesquisa inversa da imagem","Ampliando a imagem","Perguntando a um colega"],"a":0,"e":"A pesquisa inversa mostra onde a imagem apareceu primeiro.","t":"Notícias falsas e IA"},
+ {"q":"Antes de partilhares uma notícia que te deixou zangado(a), o que deves fazer?","o":["Respirar e confirmar noutras fontes","Partilhar logo para avisar","Comentar com insultos"],"a":0,"e":"As notícias falsas jogam com as emoções para se espalharem.","t":"Notícias falsas e IA"},
+ {"q":"Qual destes é um sinal de que uma notícia pode ser falsa?","o":["Título em maiúsculas a gritar e sem fonte","Autor e data identificados","Várias fontes oficiais citadas"],"a":0,"e":"Notícias a sério dizem quem escreveu, quando e com que fontes.","t":"Notícias falsas e IA"},
+ {"q":"A inteligência artificial pode escrever textos. Num trabalho da escola, o correto é…","o":["Copiar e dizer que fui eu","Dizer que usei IA e confirmar o que ela escreveu","Pedir à IA que invente fontes"],"a":1,"e":"A IA engana-se. Tens de verificar e ser honesto sobre o que usaste.","t":"Notícias falsas e IA"},
+ {"q":"Para usares uma imagem num trabalho de grupo, o mais correto é…","o":["Escolher imagens com licença que permita o uso e indicar a fonte","Usar a primeira que aparece","Tirar a marca de água"],"a":0,"e":"Muitas imagens têm licenças (como Creative Commons) que explicam como as podes usar.","t":"Direitos de autor","l":"Código do Direito de Autor e dos Direitos Conexos."},
+ {"q":"A música que usas num vídeo que publicas pode ter direitos de autor?","o":["Sim, e a plataforma pode retirar o vídeo","Não, a música é sempre livre","Só se for em inglês"],"a":0,"e":"Quem cria a música tem direitos sobre ela.","t":"Direitos de autor","l":"Código do Direito de Autor e dos Direitos Conexos."}];
+/* as perguntas já feitas ficam guardadas: não repetem entre jogos até saírem todas */
+const LS_QSEEN='vb_tetris_qseen_v3';
+function qSeenLoad(){ try{ const a=JSON.parse(localStorage.getItem(LS_QSEEN)||'[]'); return Array.isArray(a)?a.filter(n=>Number.isInteger(n)&&n>=0&&n<QUIZ.length):[]; }catch(e){ return []; } }
+let qUsed=qSeenLoad(), qLastTheme='', qCur=null, qAnswered=false, qSel=-1, qOpenedAt=0, qAnsweredAt=0;
+const qBox=$('quiz'), qNext=$('qNext');
+/* ═══════════════ PERGUNTAS ACESSÍVEIS ═══════════════ */
+const A11Y_KEY='vb_tetris_a11y';
+let a11y={read:false,big:false,contrast:false,easy:false}, qLastFb='';
+try{ Object.assign(a11y,JSON.parse(localStorage.getItem(A11Y_KEY)||'{}')); }catch(e){}
+const TTS=('speechSynthesis' in window)&&('SpeechSynthesisUtterance' in window);
+let ptVoice=null;
+function pickVoice(){ if(!TTS) return; const vs=speechSynthesis.getVoices(); ptVoice=vs.find(v=>/^pt[-_]PT$/i.test(v.lang))||vs.find(v=>/^pt/i.test(v.lang))||null; }
+if(TTS){ pickVoice(); try{ speechSynthesis.addEventListener('voiceschanged',pickVoice); }catch(e){} }
+function ttsClean(t){
+  return t.replace(/\barts\.\s*/gi,'artigos ').replace(/\bart\.\s*/gi,'artigo ').replace(/n\.º/g,'número').replace(/(\d+)\.º/g,'$1')
+          .replace(/€/g,' euros').replace(/\*#06#/g,'asterisco, cardinal, zero, seis, cardinal').replace(/\s+/g,' ');
+}
+function speakText(t){
+  if(!TTS) return;
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(ttsClean(t)); u.lang='pt-PT'; if(ptVoice) u.voice=ptVoice; u.rate=.92; speechSynthesis.speak(u); }catch(e){}
+}
+function stopSpeak(){ if(TTS){ try{ speechSynthesis.cancel(); }catch(e){} } }
+function srSay(t){ const e=$('srStatus'); if(!e) return; e.textContent=''; setTimeout(()=>{ e.textContent=t; },60); }
+function qSpeechText(){ const it=qCur.it; return 'Pergunta. '+it.q+' '+qCur.order.map((k,n)=>'Opção '+(n+1)+'. '+it.o[k]+'.').join(' '); }
+function readNow(){ if(!qCur||!quizOpen) return; speakText(qAnswered?qLastFb:qSpeechText()); }
+function a11yApply(){
+  document.body.classList.toggle('a11y-big',!!a11y.big);
+  document.body.classList.toggle('a11y-contrast',!!a11y.contrast);
+  document.body.classList.toggle('a11y-easy',!!a11y.easy);
+  [['aAuto','read'],['aBig','big'],['aContrast','contrast'],['aEasy','easy']].forEach(([id,k])=>$(id).setAttribute('aria-pressed',a11y[k]?'true':'false'));
+  try{ localStorage.setItem(A11Y_KEY,JSON.stringify(a11y)); }catch(e){}
+}
+[['aAuto','read'],['aBig','big'],['aContrast','contrast'],['aEasy','easy']].forEach(([id,k])=>{
+  $(id).addEventListener('click',()=>{ a11y[k]=!a11y[k]; a11yApply(); if(k==='read'){ if(a11y.read) readNow(); else stopSpeak(); } });
+});
+$('aListen').addEventListener('click',readNow);
+if(!TTS){ $('aListen').classList.add('hidden'); $('aAuto').classList.add('hidden'); }
+a11yApply();
+
+function openQuiz(){
+  if(qUsed.length>=QUIZ.length) qUsed=qUsed.slice(-8);   /* recomeça, mas sem repetir já as 8 últimas */
+  let pool=[]; for(let k=0;k<QUIZ.length;k++) if(!qUsed.includes(k)) pool.push(k);
+  const other=pool.filter(k=>QUIZ[k].t!==qLastTheme); if(other.length) pool=other;   /* tema diferente do anterior */
+  const i=pool[Math.floor(Math.random()*pool.length)];
+  qUsed.push(i); qLastTheme=QUIZ[i].t;
+  try{ localStorage.setItem(LS_QSEEN,JSON.stringify(qUsed)); }catch(e){}
+  qBox.querySelectorAll('.qplus,.qstar').forEach(n=>n.remove());
+  $('qTag').textContent='🧠 '+(QUIZ[i].t||'Pergunta VanBerto\'s')+' · +100 pontos';
+  const it=QUIZ[i], order=it.o.map((_,k)=>k);
+  for(let k=order.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [order[k],order[j]]=[order[j],order[k]]; }
+  qCur={it,order}; qAnswered=false; quizOpen=true; paused=true;
+  qSel=-1; qOpenedAt=performance.now();
+  try{ if(document.activeElement&&document.activeElement.blur) document.activeElement.blur(); }catch(e){}   // nenhum botão com foco a "roubar" o Espaço/Enter
+  $('qHint').textContent='⌨️ Carrega 1, 2 ou 3 (ou A, B, C) — ou usa ↑ ↓ e Enter'+(TTS?' · L para ouvir':'');
+  $('qText').textContent=it.q; $('qFb').textContent=''; qNext.classList.add('hidden');
+  const box=$('qOpts'); box.innerHTML='';
+  order.forEach((k,n)=>{
+    const b=document.createElement('button'); b.className='btn'; b.type='button'; b.dataset.k=k;
+    b.textContent=(n+1)+'. '+it.o[k]; b.onclick=()=>answerQuiz(k); box.appendChild(b);
+  });
+  qBox.classList.remove('hidden'); vbSay('Pergunta! 🧠',2000); vib(20);
+  try{ $('qText').focus({preventScroll:true}); }catch(e){}   // leitores de ecrã começam pela pergunta
+  if(a11y.read) setTimeout(()=>{ if(quizOpen&&!qAnswered) speakText(qSpeechText()); },400);
+}
+function answerQuiz(k){
+  if(!qAnswered&&qCur){
+    qAnswered=true; qAnsweredAt=performance.now(); const it=qCur.it, right=k===it.a; st.quizTotal++; if(right) st.quizRight++;
+    [...$('qOpts').children].forEach(b=>{ const kk=Number(b.dataset.k); b.disabled=true; if(kk===it.a){ b.classList.add('ok'); b.setAttribute('aria-label',b.textContent+' — resposta certa'); } else if(kk===k){ b.classList.add('bad'); b.setAttribute('aria-label',b.textContent+' — a tua resposta, errada'); } });
+    if(right){
+      qStreak++; const bonus=qStreak>=3?50:0;
+      score+=100+bonus; bump(scoreEl); sfxCorrect(qStreak); qCelebrate(100+bonus,qStreak);
+      $('qFb').innerHTML='✅ <strong>Certo! +100 pontos.</strong> '+it.e+qLaw(it)+(bonus?'<br>🔥 <strong>Sequência de '+qStreak+'! +50 extra</strong>':'');
+      vbSay(bonus?'Sequência de '+qStreak+'! 🔥':['Boa! 🧠','Sabes tudo! 🌟','Esperto! 🤩'][Math.floor(Math.random()*3)],2400); vbDance(bonus?3:2);
+    } else {
+      qStreak=0; sfxWrong();
+      $('qFb').innerHTML='💡 <strong>Quase!</strong> '+it.e+qLaw(it);
+      vbSay('Agora já sabes! 💡',2400); vbSad();
+    }
+    qLastFb=(right?'Certo! ':'Quase! ')+it.e+(it.l?' Em Portugal: '+it.l:'');
+    if(a11y.read) speakText(qLastFb);
+    $('qHint').textContent='⌨️ Carrega Enter ou Espaço para continuar'+(TTS?' · L para ouvir':'');
+    qNext.classList.remove('hidden'); qNext.focus();
+  }
+}
+function qLaw(it){ return it.l?'<div class="q-law">🇵🇹 <strong>Em Portugal:</strong> '+it.l+'</div>':''; }
+function qCelebrate(pts,streak){
+  const p=document.createElement('div'); p.className='qplus'; p.textContent='+'+pts+(streak>=3?' 🔥':''); qBox.appendChild(p); setTimeout(()=>p.remove(),1300);
+  if(REDUCE) return;
+  const em=['⭐','✨','🌟','💫'];
+  for(let k=0;k<12;k++){
+    const s=document.createElement('span'); s.className='qstar'; s.textContent=em[k%4];
+    const a=Math.random()*Math.PI*2, d=70+Math.random()*90;
+    s.style.setProperty('--dx',Math.cos(a)*d+'px'); s.style.setProperty('--dy',Math.sin(a)*d+'px');
+    qBox.appendChild(s); setTimeout(()=>s.remove(),1000);
+  }
+}
+function qSelect(n){
+  const bs=[...$('qOpts').children]; if(!bs.length) return;
+  qSel=(n+bs.length)%bs.length;
+  bs.forEach((b,i)=>b.classList.toggle('sel',i===qSel));
+  try{ ensureAudio(); beep(520,30,'square',0.03); }catch(e){}
+}
+function closeQuiz(){
+  if(!quizOpen||!qAnswered) return;
+  quizOpen=false; paused=false; acc=0; qBox.classList.add('hidden'); stopSpeak();
+}
+qNext.onclick=closeQuiz;
+
+/* ═══════════════ CICLO PRINCIPAL ═══════════════ */
+let lastT=0;
+function frame(t){
+  const dt=lastT?Math.min(t-lastT,100):0; lastT=t;
+  stepTheme(dt);
+  dispScore+=(score-dispScore)*(1-Math.exp(-dt/130)); if(Math.abs(score-dispScore)<1) dispScore=score;   /* a pontuação "rola" até ao valor novo */
+  if(!paused) stepFx(dt);
+  if(piece){ const k1=1-Math.exp(-dt/42); piece.vx+=(piece.x-piece.vx)*k1; piece.vy+=(piece.y-piece.vy)*k1; if(Math.abs(piece.x-piece.vx)<.01) piece.vx=piece.x; if(Math.abs(piece.y-piece.vy)<.01) piece.vy=piece.y; }
+  /* as linhas de cima caem com gravidade, batem no monte e ressaltam um pouco */
+  for(let y=0;y<ROWS;y++) if(fallOff[y]>0||fallV[y]!==0){
+    fallV[y]+=FALL_G*dt; fallOff[y]-=fallV[y]*dt;
+    if(fallOff[y]<=0){
+      const v=fallV[y]; fallOff[y]=0;
+      if(v>.0035){ fallV[y]=-Math.min(v*.3,.0065); if(v>.009&&!landSfx){ landSfx=true; beep(170,70,'sine',0.06,90); } }
+      else fallV[y]=0;
+    }
+  }
+  if(running&&!paused&&!quizOpen) st.ms+=dt;
+  if(running&&!paused){
+    if(clearing){ if(clearing.hold>0) clearing.hold-=dt; else clearing.t+=dt; if(clearing.t>=CLEAR_MS) finishClear(); }
+    else if(piece){ acc+=dt; if(acc>=dropInterval){ acc=0; gravity(); } }
+  }
+  try{ render(); }catch(e){ if(!frame.warned){ frame.warned=true; console.error('render:',e); } }
+  requestAnimationFrame(frame);
+}
+
+/* ═══════════════ OVERLAY E CONTROLOS ═══════════════ */
+let ovShownAt=0;
+function showOverlay(title,html,btn){ ovShownAt=performance.now(); ovTitle.textContent=title; ovText.innerHTML=html; ovBtn.textContent=btn; overlay.classList.remove('hidden'); }
+function hideOverlay(){ overlay.classList.add('hidden'); partyStop(); }
+
+function act(a){
+  if(!running||paused||clearing||!piece) return;
+  ensureAudio();
+  if(a==='left') move(-1);
+  else if(a==='right') move(1);
+  else if(a==='rotate') rotate();
+  else if(a==='down') softDrop();
+  else if(a==='hard') hardDrop();
+  else if(a==='hold') doHold();
+}
+
+let lastTap=0;
+canvas.addEventListener('pointerdown',e=>{
+  if(!running||paused) return;
+  e.preventDefault();
+  const now=performance.now(), dbl=(now-lastTap)<280; lastTap=now;
+  if(dbl){ act('hard'); return; }
+  const r=canvas.getBoundingClientRect();
+  const rx=(e.clientX-r.left)/r.width, ry=(e.clientY-r.top)/r.height;
+  if(ry<0.25) act('rotate'); else if(rx<0.33) act('left'); else if(rx>0.66) act('right'); else act('down');
+},{passive:false});
+
+let repT=null, repI=null;
+function stopRep(){ clearTimeout(repT); clearInterval(repI); repT=repI=null; }
+$('pad').addEventListener('pointerdown',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  e.preventDefault(); const a=b.dataset.a; act(a); stopRep();
+  if(a==='left'||a==='right'||a==='down') repT=setTimeout(()=>{ repI=setInterval(()=>act(a),85); },230);
+});
+['pointerup','pointercancel','blur'].forEach(ev=>window.addEventListener(ev,stopRep));
+
+window.addEventListener('keydown',e=>{
+  if(quizOpen){
+    if(e.repeat||e.ctrlKey||e.metaKey||e.altKey) return;
+    const kq=e.key.toLowerCase();
+    const ae=document.activeElement, onBtn=ae&&ae.closest&&(ae.closest('#a11yBar')||(!qAnswered&&ae.closest('#qOpts')));
+    if(onBtn&&(kq==='enter'||kq===' ')) return;   // botão com foco (Tab): deixa o clique normal acontecer
+    if(kq==='l'){ e.preventDefault(); readNow(); return; }
+    if(!qAnswered){
+      const idx=Math.max(['1','2','3'].indexOf(kq), ['a','b','c'].indexOf(kq));   // 1/2/3 ou A/B/C
+      const ready=performance.now()-qOpenedAt>450;   // evita respostas sem querer (teclas de jogo ainda carregadas)
+      if(idx>=0&&idx<qCur.order.length){ e.preventDefault(); if(ready) answerQuiz(qCur.order[idx]); }
+      else if(kq==='arrowdown'||kq==='arrowright'){ e.preventDefault(); qSelect(qSel<0?0:qSel+1); }
+      else if(kq==='arrowup'||kq==='arrowleft'){ e.preventDefault(); qSelect(qSel<0?qCur.order.length-1:qSel-1); }
+      else if(kq==='enter'||kq===' '){ e.preventDefault(); if(ready&&qSel>=0) answerQuiz(qCur.order[qSel]); }
+    } else if(kq==='enter'||kq===' '){
+      e.preventDefault(); if(performance.now()-qAnsweredAt>350) closeQuiz();
+    }
+    return;
+  }
+  if(nameMode) return;
+  if(!overlay.classList.contains('hidden')&&(e.key==='Enter'||e.key===' ')){   // avisos (começar, pausa, ajuda, fim): Enter/Espaço = botão
+    e.preventDefault();
+    if(!e.repeat&&performance.now()-ovShownAt>600) ovBtn.click();
+    return;
+  }
+  const map={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'rotate',ArrowDown:'down',' ':'hard'};
+  if(map[e.key]){
+    e.preventDefault();
+    if(document.activeElement&&document.activeElement.tagName==='BUTTON') document.activeElement.blur();
+    act(map[e.key]); return;
+  }
+  const kk=e.key.toLowerCase();
+  if(kk==='p') togglePause();
+  else if(kk==='c'||kk==='shift') doHold();
+});
+
+function startGame(){
+  if(nameMode||helpMode) return;
+  ensureAudio();
+  board=newBoard(); bag=[]; piece=newPiece(); queue=[newPiece(),newPiece(),newPiece()]; held=null; canHold=true; clearing=null; fallOff=Array(ROWS).fill(0); fallV=Array(ROWS).fill(0);
+  st.maxCombo=0; st.quizRight=0; st.quizTotal=0; st.ms=0; st.pieces=0;
+  parts.length=0; pops.length=0; flashes.length=0; trails.length=0; blooms.length=0; rings.length=0; wellFlash=0; dispScore=0; qStreak=0;
+  score=0; level=1; lines=0; dropInterval=intervalFor(1); acc=0; combo=0; pieceCount=0;
+  quizOpen=false; $('quiz').classList.add('hidden'); setTheme(0); partyStop(); stopSpeak();
+  running=true; paused=false; resumeMode=false; clearSave(); pauseBtn.textContent='⏸ PAUSA';
+  hideOverlay(); vbSay('Vamos lá! 🚀',2200); vbJump();
+}
+function togglePause(){
+  if(!running||quizOpen) return;
+  paused=!paused;
+  if(paused){ pauseBtn.textContent='▶ CONTINUAR'; showOverlay('PAUSA','O jogo está em pausa.','▶ CONTINUAR'); }
+  else { pauseBtn.textContent='⏸ PAUSA'; hideOverlay(); }
+}
+
+/* ═══════════════ GUARDAR E CONTINUAR ═══════════════ */
+let resumeMode=false;
+function clearSave(){ try{ localStorage.removeItem(LS_SAVE); }catch(e){} }
+function readSave(){
+  try{
+    const s=JSON.parse(localStorage.getItem(LS_SAVE)||'null');
+    if(!s||s.v!==1||!Array.isArray(s.board)||s.board.length!==ROWS||!s.board.every(r=>Array.isArray(r)&&r.length===COLS)) return null;
+    if(!s.piece||!SHAPES[s.piece.k]||!Array.isArray(s.queue)||!s.queue.every(k=>SHAPES[k])) return null;
+    return s;
+  }catch(e){ return null; }
+}
+function hasSave(){ return !!readSave(); }
+function saveGame(){
+  if(!running||!piece||clearing) return;
+  try{
+    localStorage.setItem(LS_SAVE,JSON.stringify({
+      v:1, diff, extra:modeExtra, board,
+      piece:{k:piece.k,x:piece.x,y:piece.y,shape:piece.shape},
+      queue:queue.map(p=>p.k), held, canHold, bag,
+      score, level, lines, combo, pieceCount, qStreak, st:{...st}
+    }));
+  }catch(e){}
+}
+function showResume(s){
+  s=s||readSave(); if(!s){ resumeMode=false; showStart(); return; }
+  resumeMode=true;
+  showOverlay('JOGO GUARDADO','Ficaste em <b>⭐ '+s.score+' pontos</b> · 🧩 nível '+s.level+' · 📏 '+s.lines+' linhas.<br>Queres continuar onde ficaste?<br><small>Para começar de novo, usa ⟳ REINICIAR no menu ☰.</small>','▶ CONTINUAR JOGO');
+}
+function loadGame(){
+  const s=readSave(); resumeMode=false;
+  if(!s){ startGame(); return; }
+  try{
+    ensureAudio();
+    diff=DIFF[s.diff]?s.diff:diff; modeExtra=!!s.extra; applyMode();
+    board=s.board; bag=Array.isArray(s.bag)?s.bag.filter(k=>SHAPES[k]):[];
+    piece=makePiece(s.piece.k); piece.shape=s.piece.shape; piece.x=piece.vx=s.piece.x; piece.y=piece.vy=s.piece.y;
+    queue=s.queue.map(makePiece); held=SHAPES[s.held]?s.held:null; canHold=!!s.canHold;
+    if(!valid(0,0)) throw new Error('save invalido');
+    clearing=null; fallOff=Array(ROWS).fill(0); fallV=Array(ROWS).fill(0);
+    Object.assign(st,{maxCombo:0,quizRight:0,quizTotal:0,ms:0,pieces:0},s.st||{});
+    parts.length=0; pops.length=0; flashes.length=0; trails.length=0; blooms.length=0; rings.length=0; wellFlash=0; qStreak=s.qStreak|0;
+    score=s.score|0; dispScore=score; level=Math.max(1,s.level|0); lines=s.lines|0; combo=s.combo|0; pieceCount=s.pieceCount|0;
+    dropInterval=intervalFor(level); acc=0;
+    quizOpen=false; $('quiz').classList.add('hidden'); setTheme(level-1); partyStop(); stopSpeak();
+    running=true; paused=false; pauseBtn.textContent='⏸ PAUSA';
+    hideOverlay(); vbSay('Bem-vindo de volta! 🎮',2400); vbJump();
+  }catch(e){ console.error('loadGame:',e); clearSave(); startGame(); }
+}
+startBtn.onclick=startGame; resetBtn.onclick=startGame; pauseBtn.onclick=togglePause;
+let nameMode=false, helpMode=false;
+const nameIn=$('nameIn');
+function askName(){
+  if(running&&!paused) return;
+  nameMode=true; nameIn.value=playerName; nameIn.classList.remove('hidden');
+  showOverlay('Como te chamas?','Escreve o teu nome para o VanBerto\'s te conhecer!','OK ▶');
+  setTimeout(()=>nameIn.focus(),50);
+}
+function saveName(){
+  const v=nameIn.value.trim().slice(0,16);
+  if(!v){ nameIn.focus(); return; }
+  playerName=v; try{ localStorage.setItem('mundocrianca_player',v); }catch(e){}
+  nameMode=false; nameIn.classList.add('hidden'); showGreet();
+  vbSay('Olá, '+v+'! Vamos jogar? 🎮',3500); vbJump();
+  if(helpSeen()) showStart(); else showHelp();
+}
+function helpSeen(){ try{ return localStorage.getItem(LS_HELP)==='1'; }catch(e){ return true; } }
+function showStart(){ if(!running&&!resumeMode&&hasSave()){ showResume(); return; } resumeMode=false; showOverlay('TETRIS','Completa linhas para ganhar pontos!<br>Toca no ecrã, usa os botões ou o teclado.','▶ COMEÇAR'); }
+function showHelp(){
+  helpMode=true;
+  showOverlay('Como jogar','<div class="help"><div>👆 <b>Toque:</b> topo roda • lados movem • centro desce • duplo toque cai</div><div>⌨️ <b>Teclas:</b> ← → mover • ↑ rodar • ↓ descer • Espaço queda • P pausa • Enter ou Espaço continua</div><div>📦 <b>C</b> guarda a peça na reserva (1 vez por peça)</div><div>📏 Completa linhas para ganhar pontos</div><div>🔥 Linhas seguidas dão combos com bónus</div><div>🧠 Responde às perguntas com 1, 2, 3 (ou A, B, C, ou ↑ ↓ e Enter) para ganhar pontos extra</div></div>','Percebi! ▶');
+}
+function closeHelp(){
+  helpMode=false; try{ localStorage.setItem(LS_HELP,'1'); }catch(e){}
+  if(running) showOverlay('PAUSA','O jogo está em pausa.','▶ CONTINUAR'); else showStart();
+}
+function applyMode(){
+  modeBtn.textContent=modeExtra?'🎮 EXTRA':'🎮 CLÁSSICO';
+  diffBtn.textContent=DIFF[diff].e+' '+DIFF[diff].n;
+  try{ bestScore=Number(localStorage.getItem(bestKey()))||0; }catch(e){ bestScore=0; }
+  bestEl.textContent=bestScore; bag=[];
+}
+modeBtn.onclick=()=>{
+  if(nameMode||quizOpen) return;
+  modeExtra=!modeExtra; try{ localStorage.setItem('vb_tetris_modo',modeExtra?'extra':'classic'); }catch(e){}
+  applyMode(); vbSay(modeExtra?'Modo extra: peças novas! ✨':'Modo clássico! 🧩',2400);
+  if(modeBtn.blur) modeBtn.blur();
+};
+diffBtn.onclick=()=>{
+  if(nameMode||quizOpen) return;
+  diff=DIFF_KEYS[(DIFF_KEYS.indexOf(diff)+1)%3]; try{ localStorage.setItem('vb_tetris_dif',diff); }catch(e){}
+  applyMode(); dropInterval=intervalFor(level); vbSay('Dificuldade '+DIFF[diff].n.toLowerCase()+'! '+DIFF[diff].e,2400); diffBtn.blur();
+};
+applyMode();
+helpBtn.onclick=()=>{ if(nameMode||quizOpen) return; if(running&&!paused) togglePause(); showHelp(); };
+quizBtn.onclick=()=>{ quizOn=!quizOn; quizBtn.textContent=quizOn?'🧠 PERGUNTAS':'🧠 SEM PERGUNTAS'; try{ localStorage.setItem(LS_QUIZ,quizOn?'on':'off'); }catch(e){} };
+quizBtn.textContent=quizOn?'🧠 PERGUNTAS':'🧠 SEM PERGUNTAS';
+nameIn.addEventListener('keydown',e=>{ e.stopPropagation(); if(e.key==='Enter'){ e.preventDefault(); saveName(); } });
+$('greet').onclick=askName;
+ovBtn.onclick=()=>{ if(nameMode) saveName(); else if(helpMode) closeHelp(); else if(resumeMode) loadGame(); else if(running&&paused) togglePause(); else startGame(); };
+if(!playerName) askName(); else if(!helpSeen()) showHelp(); else if(hasSave()) showResume(); if(playerName) setTimeout(()=>vbSay('Olá, '+playerName+'! Vamos jogar? 🎮',4000),900);
+soundBtn.onclick=()=>{ soundOn=!soundOn; soundBtn.innerHTML=(soundOn?'🔊<span class="lbl"> Som</span>':'🔇<span class="lbl"> Sem som</span>'); };
+ghostBtn.onclick=()=>{ showGhost=!showGhost; ghostBtn.textContent=showGhost?'👻 SOMBRA':'👻 SEM SOMBRA'; };
+document.addEventListener('visibilitychange',()=>{ if(document.hidden&&running&&!paused) togglePause(); if(document.hidden) saveGame(); });
+window.addEventListener('pagehide',saveGame);
+
+
+/* ═══════════════ BARRA DE ESTADO (telemóvel) ═══════════════ */
+const mqMobile=window.matchMedia('(max-width:759px)');
+const hudCv=$('hudNext'), hudCtx=hudCv.getContext('2d'), hudHoldCv=$('hudHold'), hudHoldCtx=hudHoldCv.getContext('2d');
+const hudEls={score:$('hScore'),level:$('hLevel'),lines:$('hLines'),combo:$('hCombo'),best:$('hBest'),next:$('hNext')};
+let hudKey='', hudTxt={};
+function hudSet(k,v){ v=String(v); if(hudTxt[k]!==v){ hudTxt[k]=v; hudEls[k].textContent=v; } }
+function drawHud(){
+  if(!mqMobile.matches) return;
+  hudSet('score',Math.round(dispScore)); hudSet('level',level); hudSet('lines',lines); hudSet('combo',combo);
+  hudSet('best',bestScore); hudSet('next',Math.max(0,level*POINTS_LEVEL-score));
+  { const hb=$('hBar'); if(hb) hb.style.width=Math.round(lvFrac()*100)+'%'; }
+  const key=(held||'-')+canHold+queue.map(q=>q?q.color+q.shape.length+q.shape[0].length:'').join('|');
+  if(key===hudKey) return; hudKey=key;
+  hudCtx.clearRect(0,0,hudCv.width,hudCv.height); hudHoldCtx.clearRect(0,0,100,100);
+  if(held) drawMini(hudHoldCtx,SHAPES[held],COLORS[held],22,50,52,canHold?1:.35);
+  if(queue[0]) drawMini(hudCtx,queue[0].shape,queue[0].color,24,50,52);
+  if(queue[1]) drawMini(hudCtx,queue[1].shape,queue[1].color,18,150,52,.9);
+  if(queue[2]) drawMini(hudCtx,queue[2].shape,queue[2].color,18,250,52,.75);
+}
+
+/* ═══════════════ MENU + MASCOTE (telemóvel) ═══════════════ */
+const sideColEl=document.querySelector('.side-col'), mascotEl=$('mascot'), hdrEl=document.querySelector('header'), hdrBtnsEl=document.querySelector('.hdr-btns');
+function placeMascot(){
+  if(mascotEl.parentElement!==hdrEl) hdrEl.insertBefore(mascotEl,hdrBtnsEl);
+  if(!mqMobile.matches) document.body.classList.remove('menu-open');
+  hudKey=''; scheduleFit();
+}
+function openMenu(){ if(running&&!paused&&!quizOpen) togglePause(); document.body.classList.add('menu-open'); }
+function closeMenu(){ document.body.classList.remove('menu-open'); }
+$('hMenu').onclick=openMenu; $('menuClose').onclick=closeMenu;
+sideColEl.addEventListener('click',e=>{ if(e.target===sideColEl) closeMenu(); });
+[startBtn,resetBtn,helpBtn].forEach(b=>b.addEventListener('click',closeMenu));
+const hPauseEl=$('hPause'); hPauseEl.onclick=()=>pauseBtn.click();
+new MutationObserver(()=>{ hPauseEl.innerHTML=/CONTINUAR/.test(pauseBtn.textContent)?'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>':'<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="5" height="16" rx="1.5"/><rect x="14" y="4" width="5" height="16" rx="1.5"/></svg>'; }).observe(pauseBtn,{childList:true,characterData:true,subtree:true});
+if(mqMobile.addEventListener) mqMobile.addEventListener('change',placeMascot); else mqMobile.addListener(placeMascot);
+
+/* ═══════════════ AJUSTE AO ECRÃ ═══════════════ */
+const fitRoot=document.documentElement, fitCol=document.querySelector('.game-col'), fitFrame=document.querySelector('.frame');
+function fitBoard(){
+  const vv=window.visualViewport, vw=vv?vv.width:window.innerWidth, vh=vv?vv.height:window.innerHeight;
+  const mobile=mqMobile.matches, sideBySide=vw>=760;
+  const appEl=$('app'), cs=getComputedStyle(appEl), pad=parseFloat(cs.paddingLeft)||0;
+  const screenEl=document.querySelector('.screen'), scs=getComputedStyle(screenEl), sp=parseFloat(scs.paddingLeft)||0;
+  const fcs=getComputedStyle(fitFrame);
+  const chrome=2*((parseFloat(fcs.paddingLeft)||0)+(parseFloat(fcs.borderLeftWidth)||0));
+  const slack=mobile?2*(parseFloat(scs.borderLeftWidth)||0)+2:8;
+  let availW=Math.min(vw,appEl.parentElement.clientWidth||vw, 1000) - 2*pad - 2*sp - slack - chrome;
+  if(sideBySide) availW-=290+20;
+  const top=fitCol.getBoundingClientRect().top+window.scrollY;
+  const other=fitCol.offsetHeight-canvas.offsetHeight;
+  let below=sp+pad+8;
+  if(mobile) below=sp+(parseFloat(scs.borderBottomWidth)||0)+(parseFloat(cs.paddingBottom)||0)+$('app-footer').offsetHeight+(parseFloat(cs.rowGap)||6)+2;
+  const availH=vh-top-other-below;
+  let bw=Math.min(availW, availH*COLS/ROWS, 560);
+  bw=Math.max(110, Math.floor(bw));
+  fitRoot.style.setProperty('--bw', bw+'px');
+  fitRoot.style.setProperty('--chrome', chrome+'px');
+  fitCol.classList.toggle('small-board', bw<260);
+  fitFrame.classList.toggle('small-board', bw<260);
+}
+let fitRaf=0;
+const scheduleFit=()=>{ cancelAnimationFrame(fitRaf); fitRaf=requestAnimationFrame(fitBoard); };
+window.addEventListener('resize',scheduleFit);
+window.addEventListener('orientationchange',()=>setTimeout(scheduleFit,250));
+if(window.visualViewport) window.visualViewport.addEventListener('resize',scheduleFit);
+if(window.ResizeObserver) new ResizeObserver(scheduleFit).observe(document.querySelector('header'));
+if(window.ResizeObserver) new ResizeObserver(scheduleFit).observe($('hud'));
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(scheduleFit);
+placeMascot();
+fitBoard();
+
+requestAnimationFrame(frame);
+if('serviceWorker' in navigator && /^https?:/.test(location.protocol)){ window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{})); }
+})();
+</script>
 </body>
 </html>
